@@ -19,7 +19,7 @@ class LabelPrint():
     return pdfmetrics.stringWidth(text, font_name, font_size)
   
   # Função, para adaptar o texto a comprimento e largura do pdf.
-  def draw_text(self, canvas, text, x, y, max_width, initial_font_size, font_name="Courier"):
+  def draw_text(self, canvas, text, x, y, max_width, initial_font_size, font_name="Helvetica"):
     font_size = initial_font_size
     text_width = self.get_string_width(text, font_name, font_size)
     
@@ -30,7 +30,7 @@ class LabelPrint():
     canvas.setFont(font_name, font_size)
     canvas.drawString(x, y, text)
   
-  def draw_text_break(self, canvas, text, x, y, max_width, font_size, font_name="Courier"):
+  def draw_text_break(self, canvas, text, x, y, max_width, font_size, font_name="Helvetica"):
     doc = SimpleDocTemplate("temp.pdf", pagesize=letter)
     
     # Configurar o estilo do parágrafo
@@ -38,8 +38,10 @@ class LabelPrint():
     style = styles["Normal"]
     style.fontName = font_name
     style.fontSize = font_size
+    style.leading = font_size * 1
 
     # Criar o parágrafo com quebra de linha automática
+
     paragraph = Paragraph(text, style)
 
     # Construir o parágrafo no documento temporário
@@ -53,7 +55,7 @@ class LabelPrint():
     canvas.restoreState()
 
   def draw_desc_barcode(self, canvas, barcode_value, x, y, max_width):
-    barcode = code128.Code128(barcode_value, barWidth=0.5*mm, barHeight=15*mm, humanReadable=True, fontSize=10)
+    barcode = code128.Code128(barcode_value, barWidth=0.5*mm, barHeight=15*mm, humanReadable=True, fontSize=10, fontName="Helvetica")
     barcode_width = barcode.width
 
     scale = max_width / barcode_width
@@ -64,7 +66,7 @@ class LabelPrint():
     canvas.restoreState()
 
   def draw_qtd_barcode(self, canvas, barcode_value, x, y, max_width, barHeight):
-    barcode = code128.Code128(barcode_value, barWidth=0.5*mm, barHeight=barHeight, humanReadable=True, fontSize=10)
+    barcode = code128.Code128(barcode_value, barWidth=0.5*mm, barHeight=barHeight, humanReadable=True, fontSize=10, fontName="Helvetica")
     barcode_width = barcode.width
 
     scale = max_width / barcode_width
@@ -92,7 +94,7 @@ class LabelPrint():
     # Código
     code_x, code_y = margin_left, height-50*mm
     # Descrição
-    description_x, description_y = margin_left, height-60*mm
+    description_x, description_y = margin_left, height-62*mm
     # Código de barras descrição.
     desc_barcode_x, desc_barcode_y = 0, height-80*mm
     # Quantidade
@@ -101,7 +103,8 @@ class LabelPrint():
     qtd_barcode_x, qtd_barcode_y = 50*mm, height-95*mm
 
     pdf = canvas.Canvas(f"etq.pdf", pagesize=landscape((width,height)))
-
+    print(pdf.getAvailableFonts())
+    #Inserindo elementos
     # Data
     self.draw_text(pdf, f"{self.label_info.date}", date_x, date_y, max_width, 12)
 
