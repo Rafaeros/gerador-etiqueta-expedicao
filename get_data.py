@@ -1,15 +1,21 @@
 import pandas as pd
 from datetime import datetime as dt
 
-today = dt.today()
+today = dt.now().strftime("%d/%m/%Y")
 
 class LabelInfo:
-  def __init__(self, date, client, name, description, quantity):
+  def __init__(self, date, client, code, description, quantity):
     self.date = date
     self.client = client
-    self.name = name
+    self.code = code
+    self.barcode = None
     self.description = description
     self.quantity = quantity
+
+  def set_barcode_data(self):
+    split_description = self.description.split(" ")
+    self.barcode = self.code +" "+ split_description[-1]
+    return self.barcode
 
 class LabelData:
   def __init__(self, file_path):
