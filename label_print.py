@@ -103,7 +103,6 @@ class LabelPrint():
     qtd_barcode_x, qtd_barcode_y = 50*mm, height-95*mm
 
     pdf = canvas.Canvas(f"etq.pdf", pagesize=landscape((width,height)))
-    print(pdf.getAvailableFonts())
     #Inserindo elementos
     # Data
     self.draw_text(pdf, f"{self.label_info.date}", date_x, date_y, max_width, 12)
@@ -118,7 +117,7 @@ class LabelPrint():
     self.draw_text(pdf, f"CÓDIGO: {self.label_info.code}", code_x, code_y, max_width, 20)
 
     # Descrição
-    self.draw_text_break(pdf, f"DESCRIÇÃO: {str(self.label_info.description)}", description_x, description_y, max_width, 16)
+    self.draw_text_break(pdf, f"DESCRIÇÃO: {str(self.label_info.description)}", description_x, description_y, max_width, 12)
 
     # Código de Barras
     self.draw_desc_barcode(pdf, f"{self.label_info.set_barcode_data()}", desc_barcode_x, desc_barcode_y, max_width)
