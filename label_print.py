@@ -9,6 +9,8 @@ from reportlab.pdfbase import pdfmetrics
 
 from reportlab.graphics.barcode import code128
 from reportlab.platypus import SimpleDocTemplate, Paragraph
+from win32 import win32print, win32api
+import os
 
 
 class LabelPrint():
@@ -129,3 +131,18 @@ class LabelPrint():
     self.draw_qtd_barcode(pdf, f"{self.label_info.quantity}", qtd_barcode_x, qtd_barcode_y, 40*mm, 10*mm)
 
     pdf.save()
+
+  def print_label(self, file_path = './etq.pdf'):
+    printer_name = win32print.GetDefaultPrinter()
+
+    abs_file_path = os.path.abspath(file_path)
+    print("Caminho absoluto:", abs_file_path)
+
+    win32api.ShellExecute(
+      0,
+      "printto",
+      abs_file_path,
+      f'"{printer_name}"',
+      ".",
+      0
+    )
