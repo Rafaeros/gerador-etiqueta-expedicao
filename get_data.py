@@ -11,6 +11,7 @@ class LabelInfo:
     self.barcode = None
     self.description = description
     self.quantity = quantity
+    self.set_barcode_data()
 
   def set_barcode_data(self):
     split_description = self.description.split(" ")
