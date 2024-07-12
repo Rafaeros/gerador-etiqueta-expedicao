@@ -22,7 +22,6 @@ class LabelData:
   def __init__(self, file_path):
     self.label_data = self.load_data(file_path)
     self.format_data()
-    self.print_data()
 
   def load_data(self, file_path):
     try:
@@ -45,3 +44,6 @@ class LabelData:
     except Exception as e:
       print(f"not found {e}")
       return None
+    
+get = LabelData('./ordem.xlsx')
+get.print_data()
