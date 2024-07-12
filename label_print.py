@@ -8,6 +8,14 @@ from reportlab.pdfgen import canvas
 from reportlab.pdfbase import pdfmetrics
 
 from reportlab.graphics.barcode import code128
+from reportlab.graphics.barcode import code93
+from reportlab.graphics.barcode import code39
+from reportlab.graphics.barcode import usps
+from reportlab.graphics.barcode import usps4s
+from reportlab.graphics.barcode import ecc200datamatrix
+from reportlab.platypus import SimpleDocTemplate, Paragraph
+from win32 import win32print, win32api
+import os
 from reportlab.platypus import SimpleDocTemplate, Paragraph
 from win32 import win32print, win32api
 import os
@@ -133,16 +141,16 @@ class LabelPrint():
     pdf.save()
 
   def print_label(self, file_path = './etq.pdf'):
-    printer_name = win32print.GetDefaultPrinter()
-
     abs_file_path = os.path.abspath(file_path)
     print("Caminho absoluto:", abs_file_path)
+    
+    default_printer = win32print.GetDefaultPrinter()
+    hprinter = win32print.OpenPrinter(default_printer)
+    printer_info = win32print.GetPrinter(hprinter)
 
-    win32api.ShellExecute(
-      0,
-      "printto",
-      abs_file_path,
-      f'"{printer_name}"',
-      ".",
-      0
-    )
+    try:  
+      win32api.ShellExecute(0,"print", abs_file_path, None, ".", 0)
+    except Exception as e:
+      print("Erro ao enviar para impressão: ", e)
+    finally:
+      win32print.ClosePrinter(hprinter)
