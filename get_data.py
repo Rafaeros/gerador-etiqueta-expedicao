@@ -2,6 +2,7 @@ import pandas as pd
 from datetime import datetime as dt
 
 today = dt.now().strftime("%d/%m/%Y")
+file_date = dt.now().strftime("%d_%m_%Y")
 
 class LabelInfo:
   def __init__(self, date, client, code, description, quantity):
@@ -19,7 +20,7 @@ class LabelInfo:
     return self.barcode
 
 class LabelData:
-  def __init__(self, file_path):
+  def __init__(self, file_path = f"./ordens_{file_date}.xlsx"):
     self.label_data = self.load_data(file_path)
     self.format_data()
 
@@ -44,6 +45,3 @@ class LabelData:
     except Exception as e:
       print(f"not found {e}")
       return None
-    
-get = LabelData('./ordem.xlsx')
-get.print_data()
