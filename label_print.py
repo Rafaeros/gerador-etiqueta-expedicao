@@ -112,6 +112,8 @@ class LabelPrint():
     # Código de barras quantidade.
     qtd_barcode_x, qtd_barcode_y = 50*mm, height-95*mm
 
+    weight_x, weight_y = 110*mm, height-95*mm
+
     pdf = canvas.Canvas(f"etq.pdf", pagesize=landscape((width,height)))
     #Inserindo elementos
     # Data
@@ -138,12 +140,17 @@ class LabelPrint():
     # Codigo de barras quantidade
     self.draw_qtd_barcode(pdf, f"{self.label_info.quantity}", qtd_barcode_x, qtd_barcode_y, 40*mm, 10*mm)
 
+    # Peso
+    if(self.label_info.weight!=""):
+      self.draw_text(pdf, f"PESO: {self.label_info.weight} KG", weight_x, weight_y, max_width, 12)
+
     pdf.save()
 
   def print_label(self, file_path = './etq.pdf'):
     abs_file_path = os.path.abspath(file_path)
     print("Caminho absoluto:", abs_file_path)
     
+    # Configuração impressora
     default_printer = win32print.GetDefaultPrinter()
     hprinter = win32print.OpenPrinter(default_printer)
     printer_info = win32print.GetPrinter(hprinter)
