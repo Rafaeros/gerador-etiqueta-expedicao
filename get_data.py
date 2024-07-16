@@ -5,13 +5,14 @@ today = dt.now().strftime("%d/%m/%Y")
 file_date = dt.now().strftime("%d_%m_%Y")
 
 class LabelInfo:
-  def __init__(self, date, client, code, description, quantity):
+  def __init__(self, date, client, code, description, quantity, weight):
     self.date = date
     self.client = client
     self.code = code
     self.barcode = None
     self.description = description
     self.quantity = quantity
+    self.weight = weight
     self.set_barcode_data()
 
   def set_barcode_data(self):
@@ -21,6 +22,7 @@ class LabelInfo:
 
 class LabelData:
   def __init__(self, file_path = f"./ordens_{file_date}.xlsx"):
+    self.file_path = file_path
     self.label_data = self.load_data(file_path)
     self.format_data()
 
@@ -37,10 +39,10 @@ class LabelData:
   def print_data(self):
     print(self.label_data)
 
-  def get_data(self, op):
+  def get_data(self, op, kg):
     try:
       current_data = self.label_data.loc[self.label_data['Código']==op, ['Cliente', 'Cód. Material', 'Material', 'Quantidade']]
-      current_label = LabelInfo(today, current_data.loc[:,['Cliente']].to_string(index=False, header=False), current_data.loc[:,['Cód. Material']].to_string(index=False, header=False), current_data.loc[:,['Material']].to_string(index=False, header=False), current_data.loc[:,['Quantidade']].to_string(index=False, header=False))
+      current_label = LabelInfo(today, current_data.loc[:,['Cliente']].to_string(index=False, header=False), current_data.loc[:,['Cód. Material']].to_string(index=False, header=False), current_data.loc[:,['Material']].to_string(index=False, header=False), current_data.loc[:,['Quantidade']].to_string(index=False, header=False), kg)
       return current_label
     except Exception as e:
       print(f"not found {e}")
