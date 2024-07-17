@@ -16,10 +16,6 @@ from reportlab.graphics.barcode import ecc200datamatrix
 from reportlab.platypus import SimpleDocTemplate, Paragraph
 from win32 import win32print, win32api
 import os
-from reportlab.platypus import SimpleDocTemplate, Paragraph
-from win32 import win32print, win32api
-import os
-
 
 class LabelPrint():
   def __init__(self, LabelInfo):
