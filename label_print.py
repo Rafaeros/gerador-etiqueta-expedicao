@@ -23,7 +23,6 @@ class LabelPrint():
 
   def get_string_width(self, text, font_name, font_size):
     return pdfmetrics.stringWidth(text, font_name, font_size)
-  
   # Função, para adaptar o texto a comprimento e largura do pdf.
   def draw_text(self, canvas, text, x, y, max_width, initial_font_size, font_name="Helvetica"):
     font_size = initial_font_size
