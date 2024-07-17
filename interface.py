@@ -1,6 +1,6 @@
 import customtkinter as ctk
 from CTkMessagebox import CTkMessagebox as ctkmsg
-from get_data import LabelData
+from get_data import LabelData, LabelInfo
 from label_print import LabelPrint
 import time
 
@@ -126,7 +126,7 @@ class Interface:
 
   def print_label(self):
     try:
-      label = LabelPrint(self.label_data.get_data(self.id, self.weight_input.get()))
+      label = LabelPrint(LabelInfo(self.client_input.get(), self.code_input.get(), self.description_input.get(), self.quantity_input.get(), self.weight_input.get()))
       label.create_label()
       time.sleep(1)
       label.print_label()
