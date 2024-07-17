@@ -1,12 +1,12 @@
 import pandas as pd
 from datetime import datetime as dt
 
-today = dt.now().strftime("%d/%m/%Y")
 file_date = dt.now().strftime("%d_%m_%Y")
 
 class LabelInfo:
-  def __init__(self, date, client, code, description, quantity, weight):
-    self.date = date
+  def __init__(self, client, code, description, quantity, weight):
+    today = dt.now().strftime("%d/%m/%Y")
+    self.date = today
     self.client = client
     self.code = code
     self.barcode = None
@@ -42,7 +42,7 @@ class LabelData:
   def get_data(self, op, kg):
     try:
       current_data = self.label_data.loc[self.label_data['Código']==op, ['Cliente', 'Cód. Material', 'Material', 'Quantidade']]
-      current_label = LabelInfo(today, current_data.loc[:,['Cliente']].to_string(index=False, header=False), current_data.loc[:,['Cód. Material']].to_string(index=False, header=False), current_data.loc[:,['Material']].to_string(index=False, header=False), current_data.loc[:,['Quantidade']].to_string(index=False, header=False), kg)
+      current_label = LabelInfo(current_data.loc[:,['Cliente']].to_string(index=False, header=False), current_data.loc[:,['Cód. Material']].to_string(index=False, header=False), current_data.loc[:,['Material']].to_string(index=False, header=False), current_data.loc[:,['Quantidade']].to_string(index=False, header=False), kg)
       return current_label
     except Exception as e:
       print(f"not found {e}")
