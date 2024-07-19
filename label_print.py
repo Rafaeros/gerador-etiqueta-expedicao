@@ -14,7 +14,9 @@ from reportlab.graphics.barcode import usps
 from reportlab.graphics.barcode import usps4s
 from reportlab.graphics.barcode import ecc200datamatrix
 from reportlab.platypus import SimpleDocTemplate, Paragraph
+
 from win32 import win32print, win32api
+import CTkMessagebox as ctkmsg
 import os
 
 class LabelPrint():
@@ -137,7 +139,7 @@ class LabelPrint():
 
     # Peso
     if(self.label_info.weight!=""):
-      self.draw_text(pdf, f"PESO: {self.label_info.weight} KG", weight_x, weight_y, max_width, 12)
+      self.draw_text(pdf, f"{self.label_info.weight} KG", weight_x, weight_y, max_width, 14)
 
     pdf.save()
 
