@@ -91,7 +91,7 @@ class Interface:
     self.id = ''
 
   def search_id(self, event=None):
-    self.id = self.id_input.get()
+    self.id = f"OP-0{self.id_input.get()}"
     if (self.label_data_df['Código'] == self.id).any():
       try:
         info = self.label_data.get_data(self.id, "")
@@ -125,12 +125,15 @@ class Interface:
     self.weight_input.delete(0, ctk.END)
 
   def print_label(self):
-    try:
-      label = LabelPrint(LabelInfo(self.client_input.get(), self.code_input.get(), self.description_input.get(), self.quantity_input.get(), self.weight_input.get()))
-      label.create_label()
-      time.sleep(1)
-      label.print_label()
-    except Exception as e:
-      ctkmsg(self.master, message=f"Erro ao imprimir: {e}", title="Erro", icon="cancel", option_1="OK")
-    finally:
-      self.clear_inputs()
+    if self.weight_input.get()!="":
+      try:
+        label = LabelPrint(LabelInfo(self.client_input.get(), self.code_input.get(), self.description_input.get(), self.quantity_input.get(), self.weight_input.get()))
+        label.create_label()
+        time.sleep(0.5)
+        label.print_label()
+      except Exception as e:
+        ctkmsg(self.master, message=f"Erro ao imprimir: {e}", title="Erro", icon="cancel", option_1="OK")
+      finally:
+        self.clear_inputs()
+    else:
+      ctkmsg(self.master, title="Aviso", message="Campo de peso está vazio, por favor preencha!", icon='warning', option_1="OK")
