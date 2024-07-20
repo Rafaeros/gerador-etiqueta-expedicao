@@ -145,7 +145,6 @@ class LabelPrint():
 
   def print_label(self, file_path = './etq.pdf'):
     abs_file_path = os.path.abspath(file_path)
-    print("Caminho absoluto:", abs_file_path)
     
     # Configuração impressora
     default_printer = win32print.GetDefaultPrinter()
