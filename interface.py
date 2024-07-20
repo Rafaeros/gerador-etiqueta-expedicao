@@ -43,6 +43,9 @@ class Interface:
     self.weight_label = ctk.CTkLabel(self.master, text="Peso: ")
     self.weight_input = ctk.CTkEntry(self.master, placeholder_text="Peso: 0,00 Kg")
 
+    self.lot_label = ctk.CTkLabel(self.master, text="Insira a quantidade de caixas:")
+    self.lot_input = ctk.CTkEntry(self.master, placeholder_text="N° de caixas:")
+
     self.print_button = ctk.CTkButton(self.master, text="Imprimir", command=self.print_label, width=150, height=50, corner_radius=10)
 
     padding = {'padx': 5, 'pady': 10}
@@ -63,6 +66,9 @@ class Interface:
 
     self.barcode_label.grid(row=6, column=1, **padding)
     self.barcode_input.grid(row=6, column=2, **padding)
+
+    self.lot_label.grid(row=6, column=3)
+    self.lot_input.grid(row=6, column=4)
 
     self.quantity_label.grid(row=7, column=1, **padding)
     self.quantity_input.grid(row=7, column=2, **padding)
@@ -86,8 +92,9 @@ class Interface:
     self.code_var = ctk.StringVar()
     self.description_var = ctk.StringVar()
     self.barcode_var = ctk.StringVar()
-    self.quantity_var = ctk.StringVar()
+    self.quantity_var = ctk.IntVar()
     self.weight_var = ctk.StringVar()
+    self.lot_var = ctk.IntVar()
     self.id = ''
 
   def search_id(self, event=None):
@@ -100,6 +107,7 @@ class Interface:
         self.description_var.set(info.description)
         self.barcode_var.set(info.barcode)
         self.quantity_var.set(info.quantity)
+        self.lot_var.set(1)
 
         if(self.client_input.get()==""):
           self.client_input.insert(0, self.client_var.get())
@@ -107,6 +115,7 @@ class Interface:
           self.description_input.insert(0, self.description_var.get())
           self.barcode_input.insert(0, self.barcode_var.get())
           self.quantity_input.insert(0, self.quantity_var.get())
+          self.lot_input.insert(0, self.lot_var.get())
         else:
           ctkmsg(self.master, title="Aviso", message="Insira outra OP", option_1="OK", icon="warning")
 
@@ -123,6 +132,7 @@ class Interface:
     self.barcode_input.delete(0, ctk.END)
     self.quantity_input.delete(0, ctk.END)
     self.weight_input.delete(0, ctk.END)
+    self.lot_input.delete(0, ctk.END)
 
   def print_label(self):
     if self.weight_input.get()!="":
