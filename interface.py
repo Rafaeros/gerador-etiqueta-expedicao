@@ -95,6 +95,7 @@ class Interface:
     self.quantity_var = ctk.IntVar()
     self.weight_var = ctk.StringVar()
     self.lot_var = ctk.IntVar()
+    self.lot_quantity = ''
     self.id = ''
 
   def search_id(self, event=None):
@@ -135,15 +136,27 @@ class Interface:
     self.lot_input.delete(0, ctk.END)
 
   def print_label(self):
-    if self.weight_input.get()!="":
-      try:
-        label = LabelPrint(LabelInfo(self.client_input.get(), self.code_input.get(), self.description_input.get(), self.quantity_input.get(), self.weight_input.get()))
-        label.create_label()
-        time.sleep(0.5)
-        label.print_label()
-      except Exception as e:
-        ctkmsg(self.master, message=f"Erro ao imprimir: {e}", title="Erro", icon="cancel", option_1="OK")
-      finally:
-        self.clear_inputs()
+    quantity = int(self.quantity_input.get())
+    lot = int(self.lot_input.get())
+
+    if quantity % lot == 0:
+      self.lot_quantity = int(quantity/lot)
+      
+      if self.weight_input.get()!="":
+        try:
+          label = LabelPrint(LabelInfo(self.client_input.get(), self.code_input.get(), self.description_input.get(), self.lot_quantity, self.weight_input.get()))
+          label.create_label()
+          time.sleep(0.5)
+          
+          for _ in range(int(self.lot_input.get())):
+            time.sleep(0.5)
+            label.print_label()
+
+        except Exception as e:
+          ctkmsg(self.master, message=f"Erro ao imprimir: {e}", title="Erro", icon="cancel", option_1="OK")
+        finally:
+          self.clear_inputs()
+      else:
+        ctkmsg(self.master, title="Aviso", message="Campo de peso está vazio, por favor preencha!", icon='warning', option_1="OK")
     else:
-      ctkmsg(self.master, title="Aviso", message="Campo de peso está vazio, por favor preencha!", icon='warning', option_1="OK")
+      ctkmsg(self.master, title="Erro", message="Lote não pode ser divisível", icon='warning', option_1="OK")
