@@ -1,5 +1,6 @@
-import pandas as pd
 from datetime import datetime as dt
+import pandas as pd
+import re
 
 file_date = dt.now().strftime("%d_%m_%Y")
 
@@ -15,9 +16,16 @@ class LabelInfo:
     self.weight = weight
     self.set_barcode_data()
 
+  def get_client_code(self, string):
+    pattern = r'\((.*?)\)'
+    search = re.search(pattern, string)
+    if search:
+      return search.group(0)
+    return ''
+
   def set_barcode_data(self):
-    split_description = self.description.split(" ")
-    self.barcode = self.code +" "+ split_description[-1]
+    clientcode = self.get_client_code(self.description)
+    self.barcode = self.code + " " + clientcode
     return self.barcode
 
 class LabelData:
