@@ -141,7 +141,7 @@ class Interface:
 
     if quantity % lot == 0:
       self.lot_quantity = int(quantity/lot)
-      
+
       if self.weight_input.get()!="":
         try:
           label = LabelPrint(LabelInfo(self.client_input.get(), self.code_input.get(), self.description_input.get(), self.lot_quantity, self.weight_input.get()))
@@ -159,4 +159,4 @@ class Interface:
       else:
         ctkmsg(self.master, title="Aviso", message="Campo de peso está vazio, por favor preencha!", icon='warning', option_1="OK")
     else:
-      ctkmsg(self.master, title="Erro", message="Lote não pode ser divisível", icon='warning', option_1="OK")
+      ctkmsg(self.master, title="Erro", message="Quantidade total não pode ser divisível pelo número de caixas", icon='warning', option_1="OK")
