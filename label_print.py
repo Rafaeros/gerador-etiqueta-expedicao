@@ -107,7 +107,7 @@ class LabelPrint():
     # Quantidade
     qtd_x, qtd_y = margin_left, height-95*mm
     # Código de barras quantidade.
-    qtd_barcode_x, qtd_barcode_y = 50*mm, height-95*mm
+    qtd_barcode_x, qtd_barcode_y = 60*mm, height-95*mm
 
     weight_x, weight_y = 110*mm, height-95*mm
 
@@ -132,10 +132,10 @@ class LabelPrint():
     self.draw_desc_barcode(pdf, f"{self.label_info.set_barcode_data()}", desc_barcode_x, desc_barcode_y, max_width)
 
     # Quantidade
-    self.draw_text(pdf, f"QUANTIDADE: {self.label_info.quantity}", qtd_x, qtd_y, max_width, 12)
+    self.draw_text(pdf, f"QUANTIDADE: {self.label_info.quantity} UND", qtd_x, qtd_y, max_width, 11)
 
     # Codigo de barras quantidade
-    self.draw_qtd_barcode(pdf, f"{self.label_info.quantity}", qtd_barcode_x, qtd_barcode_y, 40*mm, 10*mm)
+    self.draw_qtd_barcode(pdf, f"{self.label_info.quantity} UND", qtd_barcode_x, qtd_barcode_y, 40*mm, 10*mm)
 
     # Peso
     if(self.label_info.weight!=""):
