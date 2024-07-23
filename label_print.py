@@ -16,7 +16,6 @@ from reportlab.graphics.barcode import ecc200datamatrix
 from reportlab.platypus import SimpleDocTemplate, Paragraph
 
 from win32 import win32print, win32api
-import CTkMessagebox as ctkmsg
 import os
 
 class LabelPrint():
@@ -109,7 +108,7 @@ class LabelPrint():
     # Código de barras quantidade.
     qtd_barcode_x, qtd_barcode_y = 60*mm, height-95*mm
 
-    weight_x, weight_y = 110*mm, height-95*mm
+    weight_x, weight_y = 120*mm, height-95*mm
 
     pdf = canvas.Canvas(f"etq.pdf", pagesize=landscape((width,height)))
     #Inserindo elementos
@@ -138,8 +137,7 @@ class LabelPrint():
     self.draw_qtd_barcode(pdf, f"{self.label_info.quantity} UND", qtd_barcode_x, qtd_barcode_y, 40*mm, 10*mm)
 
     # Peso
-    if(self.label_info.weight!=""):
-      self.draw_text(pdf, f"{self.label_info.weight} KG", weight_x, weight_y, max_width, 14)
+    self.draw_text(pdf, f"{self.label_info.weight} KG", weight_x, weight_y, 145*mm, 12)
 
     pdf.save()
 
