@@ -2,7 +2,7 @@ import customtkinter as ctk
 from CTkMessagebox import CTkMessagebox as ctkmsg
 from get_data import LabelData, LabelInfo
 from label_print import LabelPrint
-import time
+from webbrowser import open_new
 
 class Interface:
   def __init__(self):
@@ -48,6 +48,9 @@ class Interface:
 
     self.print_button = ctk.CTkButton(self.master, text="Imprimir", command=self.print_label, width=150, height=50, corner_radius=10)
 
+    self.author = ctk.CTkLabel(self.master, text="Feito por: Rafael Costa")
+    self.author.bind('<Button-1>', self.open_url)
+
     padding = {'padx': 5, 'pady': 10}
 
     self.id_label.grid(row=0,column=1, **padding)
@@ -77,6 +80,7 @@ class Interface:
     self.weight_input.grid(row=7, column=4)
 
     self.print_button.grid(row=10, column=2, columnspan=3, pady=20)
+    self.author.grid(row=11, column=4, **padding)
 
   def create_variables(self):
     try:
@@ -146,10 +150,8 @@ class Interface:
         try:
           label = LabelPrint(LabelInfo(self.client_input.get(), self.code_input.get(), self.description_input.get(), self.lot_quantity, self.weight_input.get()))
           label.create_label()
-          time.sleep(0.5)
           
           for _ in range(int(self.lot_input.get())):
-            time.sleep(0.5)
             label.print_label()
 
         except Exception as e:
@@ -160,3 +162,6 @@ class Interface:
         ctkmsg(self.master, title="Aviso", message="Campo de peso está vazio, por favor preencha!", icon='warning', option_1="OK")
     else:
       ctkmsg(self.master, title="Erro", message="Quantidade total não pode ser divisível pelo número de caixas", icon='warning', option_1="OK")
+
+  def open_url(self, event=None):
+    open_new("https://github.com/Rafaeros")
