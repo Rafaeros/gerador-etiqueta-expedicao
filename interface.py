@@ -48,7 +48,7 @@ class Interface:
 
     self.print_button = ctk.CTkButton(self.master, text="Imprimir", command=self.print_label, width=150, height=50, corner_radius=10)
 
-    self.author = ctk.CTkLabel(self.master, text="Feito por: Rafael Costa")
+    self.author = ctk.CTkLabel(self.master, text="Feito por: Rafael Costa", text_color="#0000EE")
     self.author.bind('<Button-1>', self.open_url)
 
     padding = {'padx': 5, 'pady': 10}
