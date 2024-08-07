@@ -102,8 +102,20 @@ class Interface:
     self.lot_quantity = ''
     self.id = ''
 
+  def id_concat(self):
+    id_lenght = 7
+    id_input_lenght = len(self.id_input.get())
+    id_number = ""
+    
+    while(id_input_lenght < id_lenght):
+      id_number += "0"
+      id_input_lenght += 1
+      
+    concatened_id = f"OP-{id_number}{self.id_input.get()}"
+    return concatened_id
+
   def search_id(self, event=None):
-    self.id = f"OP-0{self.id_input.get()}"
+    self.id = self.id_concat()
     if (self.label_data_df['Código'] == self.id).any():
       try:
         info = self.label_data.get_data(self.id, "")
