@@ -134,7 +134,7 @@ class LabelPrint():
     self.draw_text(pdf, f"QUANTIDADE: {self.label_info.quantity} UND", qtd_x, qtd_y, max_width, 11)
 
     # Codigo de barras quantidade
-    self.draw_qtd_barcode(pdf, f"{self.label_info.quantity} UND", qtd_barcode_x, qtd_barcode_y, 40*mm, 10*mm)
+    self.draw_qtd_barcode(pdf, f"{self.label_info.quantity}", qtd_barcode_x, qtd_barcode_y, 40*mm, 10*mm)
 
     # Peso
     self.draw_text(pdf, f"{self.label_info.weight} KG", weight_x, weight_y, 145*mm, 12)
