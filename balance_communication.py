@@ -1,27 +1,32 @@
 import serial
+from time import sleep
 
-# Configuração da porta serial
-port = 'COM3'  # Substitua por sua porta COM correta
-baud_rate = 9600  # Defina a taxa de transmissão conforme necessário
-timeout = 1  # Tempo de espera para leitura em segundos
+class serial_com():
+    def __init__(self):
+        self.port: str
+        self.baud_rate: int = 9600
+        self.timeout: int = 2 # Tempo de espera para leitura
 
-try:
-    # Abrindo a conexão serial
-    ser = serial.Serial(port, baud_rate, timeout=timeout)
-    print(f'Conectado à porta {port} com baud rate {baud_rate}')
+    def set_port(self, port):
+        self.port = port
 
-    # Enviando comando para a balança, se necessário
-    command = b'COMMAND_HERE\r\n'  # Comando específico para a balança
-    ser.write(command)
+    def connection(self):
+        try:
+            # Abrindo a conexão serial
+            self.serial = serial.Serial(self.port, self.baud_rate, timeout=self.timeout)
+            print(f'Conectado à porta {self.port} com baud rate {self.baud_rate}')
+        except serial.SerialException as e:
+            print(f'Erro na comunicação: {e}')
 
-    # Lendo a resposta da balança
-    response = ser.readline().decode().strip()
-    print(f'Resposta da balança: {response}')
+    def read_serial(self) -> str:
+        sleep(5)
+        # Lendo a resposta da balança
+        response = self.serial.readline().decode().strip()
+        print(f'Resposta da balança: {response}')
+        self.serial.close()
+        return response
 
-except serial.SerialException as e:
-    print(f'Erro na comunicação: {e}')
-finally:
-    # Fechando a conexão serial
-    if ser.is_open:
-        ser.close()
-        print('Conexão serial fechada.')
+con = serial_com()
+con.set_port('COM5')
+con.connection()
+con.read_serial()
