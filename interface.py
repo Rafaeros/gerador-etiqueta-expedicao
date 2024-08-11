@@ -2,6 +2,7 @@ import customtkinter as ctk
 from CTkMessagebox import CTkMessagebox as ctkmsg
 from get_data import LabelData, LabelInfo
 from label_print import LabelPrint
+from balance_communication import Serial
 import time
 
 class Interface:
@@ -16,6 +17,28 @@ class Interface:
   def run(self):
     self.master.mainloop()
 
+  def create_variables(self):
+    try:
+      self.label_data = LabelData()
+      self.label_data_df = self.label_data.label_data
+    except Exception as e:
+      msg = ctkmsg(self.master, title=f"Erro ao carregar planilha", message=f"Não encontrado o arquivo: ordens.xlsx com a data de hoje ({e})", icon="warning", option_1="OK")
+      msg.wait_window()
+      if msg.get() == "OK":
+        self.master.destroy()
+    
+    self.balance = Serial()
+    self.client_var = ctk.StringVar()
+    self.code_var = ctk.StringVar()
+    self.description_var = ctk.StringVar()
+    self.barcode_var = ctk.StringVar()
+    self.quantity_var = ctk.IntVar()
+    self.weight_var = ctk.StringVar()
+    self.lot_var = ctk.IntVar()
+    self.manual_weight_var = ctk.StringVar(value="off")
+    self.lot_quantity = ''
+    self.id = ''
+
   def create_window(self):
     self.id_label = ctk.CTkLabel(self.master, text="Número da OP:")
     self.id_input = ctk.CTkEntry(self.master, placeholder_text="Digite o número da OP")
@@ -24,6 +47,8 @@ class Interface:
     self.search_button = ctk.CTkButton(self.master, text="Buscar", command=self.search_id, height=35, corner_radius=10)
     self.clear_inputs_button = ctk.CTkButton(self.master, text="Limpar", command=self.clear_inputs, fg_color='red', height=35, corner_radius=10)
     self.clear_inputs_button.bind('<Delete>', self.clear_inputs)
+
+    self.serial_port_menu = ctk.CTkOptionMenu(self.master, values=["COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7"], command=self.serial_port_callback)
 
     self.client_label = ctk.CTkLabel(self.master, text="Cliente:")
     self.client_input = ctk.CTkEntry(self.master, placeholder_text="Cliente do Produto", width=550, height=35)
@@ -40,6 +65,8 @@ class Interface:
     self.quantity_label = ctk.CTkLabel(self.master, text="Quantidade Total:")
     self.quantity_input = ctk.CTkEntry(self.master, placeholder_text="Quantidade Total", width=200, height=35)
 
+    self.manual_weight_checkbox = ctk.CTkCheckBox(self.master, text="Inserir Peso Manualmente", onvalue="on", offvalue="off", command=self.manual_weight_callback, variable=self.weight_var)
+
     self.weight_label = ctk.CTkLabel(self.master, text="Peso: ")
     self.weight_input = ctk.CTkEntry(self.master, placeholder_text="Peso: 0,00 Kg")
 
@@ -54,6 +81,8 @@ class Interface:
     self.id_input.grid(row=0, column=2, **padding)
     self.search_button.grid(row=0, column=3, **padding)
     self.clear_inputs_button.grid(row=1, column=3, **padding)
+
+    self.serial_port_menu.grid(row=0, column=4, **padding)
 
     self.code_label.grid(row=1, column=1, **padding)
     self.code_input.grid(row=1,column=2, **padding)
@@ -74,29 +103,21 @@ class Interface:
     self.quantity_input.grid(row=7, column=2, **padding)
 
     self.weight_label.grid(row=7, column=3)
+    self.manual_weight_checkbox.grid(row=8, column=3)
     self.weight_input.grid(row=7, column=4)
 
     self.print_button.grid(row=10, column=2, columnspan=3, pady=20)
 
-  def create_variables(self):
-    try:
-      self.label_data = LabelData()
-      self.label_data_df = self.label_data.label_data
-    except Exception as e:
-      msg = ctkmsg(self.master, title=f"Erro ao carregar planilha", message=f"Não encontrado o arquivo: ordens.xlsx com a data de hoje ({e})", icon="warning", option_1="OK")
-      msg.wait_window()
-      if msg.get() == "OK":
-        self.master.destroy()
-      
-    self.client_var = ctk.StringVar()
-    self.code_var = ctk.StringVar()
-    self.description_var = ctk.StringVar()
-    self.barcode_var = ctk.StringVar()
-    self.quantity_var = ctk.IntVar()
-    self.weight_var = ctk.StringVar()
-    self.lot_var = ctk.IntVar()
-    self.lot_quantity = ''
-    self.id = ''
+  def serial_port_callback(self, choice: str):
+    self.balance.set_port(choice)
+    response = self.balance.connect()
+    ctkmsg(self.master, title="Comunicação Serial", message=response, option_1="OK")
+
+  def manual_weight_callback(self):
+    if(self.manual_weight_var.get()=='off'):
+      self.manual_weight_var.set('on')
+    else:
+      self.manual_weight_var.set('off')
 
   def search_id(self, event=None):
     self.id = f"OP-{self.id_input.get().zfill(7)}"
@@ -117,11 +138,18 @@ class Interface:
           self.barcode_input.insert(0, self.barcode_var.get())
           self.quantity_input.insert(0, self.quantity_var.get())
           self.lot_input.insert(0, self.lot_var.get())
+
+          if(self.weight_var.get()=="off"):
+            serial_weight = self.balance.read_serial()
+            self.weight_var.set(serial_weight)
+            self.weight_input.insert(0, self.weight_var.get())
+
         else:
           ctkmsg(self.master, title="Aviso", message="Insira outra OP", option_1="OK", icon="warning")
 
       except Exception as e:
         ctkmsg(title="Erro", message=e ,option_1="OK", icon='cancel')
+
     else:
       ctkmsg(title="Não encontrado", message=f"Valor: {self.id} não foi encontrado", option_1="OK", icon="warning")
     
