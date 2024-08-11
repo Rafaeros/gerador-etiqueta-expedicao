@@ -34,14 +34,12 @@ class Serial():
                         weight = response[1:].split('#')[0]
                         weight = float(weight)
                         formatted_weight = f"{weight:.2f}".lstrip('0').rstrip('.')
-
-                        if formatted_weight == '':
-                            formatted_weight = '0.00'
-
+                        
                         formatted_weight = formatted_weight.replace('.', ',')
 
                         return formatted_weight
                     except ValueError:
                         print(f'Erro ao converter "{response}" para float.')
+                        continue
                 # Leitura a cada 0.5 segundos
                 sleep(0.5)
