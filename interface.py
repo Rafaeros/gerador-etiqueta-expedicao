@@ -11,11 +11,18 @@ class Interface:
     self.master.geometry("800x600")
     self.master.resizable(False, False)
     self.master.title("Gerador De Etiquetas")
+    self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
     self.create_variables()
     self.create_window()
 
   def run(self):
     self.master.mainloop()
+
+  def on_closing(self):
+    print(self.weight_serial.is_open)
+    if(self.weight_serial.is_open):
+      self.weight_serial.close()
+    self.master.destroy()
 
   def create_variables(self):
     try:
@@ -27,7 +34,7 @@ class Interface:
       if msg.get() == "OK":
         self.master.destroy()
     
-    self.balance = Serial()
+    self.weight_serial = Serial()
     self.client_var = ctk.StringVar()
     self.code_var = ctk.StringVar()
     self.description_var = ctk.StringVar()
@@ -48,7 +55,7 @@ class Interface:
     self.clear_inputs_button = ctk.CTkButton(self.master, text="Limpar", command=self.clear_inputs, fg_color='red', height=35, corner_radius=10)
     self.clear_inputs_button.bind('<Delete>', self.clear_inputs)
 
-    self.serial_port_menu = ctk.CTkOptionMenu(self.master, values=["COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7"], command=self.serial_port_callback)
+    self.weight_serial_port_menu = ctk.CTkOptionMenu(self.master, values=["COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7"], command=self.serial_port_callback)
 
     self.client_label = ctk.CTkLabel(self.master, text="Cliente:")
     self.client_input = ctk.CTkEntry(self.master, placeholder_text="Cliente do Produto", width=550, height=35)
@@ -82,7 +89,7 @@ class Interface:
     self.search_button.grid(row=0, column=3, **padding)
     self.clear_inputs_button.grid(row=1, column=3, **padding)
 
-    self.serial_port_menu.grid(row=0, column=4, **padding)
+    self.weight_serial_port_menu.grid(row=0, column=4, **padding)
 
     self.code_label.grid(row=1, column=1, **padding)
     self.code_input.grid(row=1,column=2, **padding)
@@ -109,8 +116,11 @@ class Interface:
     self.print_button.grid(row=10, column=2, columnspan=3, pady=20)
 
   def serial_port_callback(self, choice: str):
-    self.balance.set_port(choice)
-    response = self.balance.connect()
+    if(self.weight_serial.is_open):
+      self.weight_serial.close()
+
+    self.weight_serial.set_port(choice)
+    response = self.weight_serial.connect()
     ctkmsg(self.master, title="Comunicação Serial", message=response, option_1="OK")
 
   def manual_weight_callback(self):
@@ -139,8 +149,8 @@ class Interface:
           self.quantity_input.insert(0, self.quantity_var.get())
           self.lot_input.insert(0, self.lot_var.get())
 
-          if(self.weight_var.get()=="off"):
-            serial_weight = self.balance.read_serial()
+          if(self.weight_var.get()=="off" and self.weight_input.get()==""):
+            serial_weight = self.weight_serial.read_serial()
             self.weight_var.set(serial_weight)
             self.weight_input.insert(0, self.weight_var.get())
 
