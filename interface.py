@@ -124,44 +124,47 @@ class Interface:
     ctkmsg(self.master, title="Comunicação Serial", message=response, option_1="OK")
 
   def manual_weight_callback(self):
-    if(self.manual_weight_var.get()=='off'):
+    if self.manual_weight_var.get() == 'off':
       self.manual_weight_var.set('on')
     else:
       self.manual_weight_var.set('off')
 
   def search_id(self, event=None):
     self.id = f"OP-{self.id_input.get().zfill(7)}"
-    if (self.label_data_df['Código'] == self.id).any():
-      try:
-        info = self.label_data.get_data(self.id, "")
-        self.client_var.set(info.client)
-        self.code_var.set(info.code)
-        self.description_var.set(info.description)
-        self.barcode_var.set(info.barcode)
-        self.quantity_var.set(info.quantity)
-        self.lot_var.set(1)
-
-        if(self.client_input.get()==""):
-          self.client_input.insert(0, self.client_var.get())
-          self.code_input.insert(0, self.code_var.get())
-          self.description_input.insert(0, self.description_var.get())
-          self.barcode_input.insert(0, self.barcode_var.get())
-          self.quantity_input.insert(0, self.quantity_var.get())
-          self.lot_input.insert(0, self.lot_var.get())
-
-          if(self.weight_var.get()=="off" and self.weight_input.get()==""):
-            serial_weight = self.weight_serial.read_serial()
-            self.weight_var.set(serial_weight)
-            self.weight_input.insert(0, self.weight_var.get())
-
-        else:
-          ctkmsg(self.master, title="Aviso", message="Insira outra OP", option_1="OK", icon="warning")
-
-      except Exception as e:
-        ctkmsg(title="Erro", message=e ,option_1="OK", icon='cancel')
-
-    else:
+    
+    if not (self.label_data_df['Código'] == self.id).any():
       ctkmsg(title="Não encontrado", message=f"Valor: {self.id} não foi encontrado", option_1="OK", icon="warning")
+      return
+      
+    try:
+      info = self.label_data.get_data(self.id, "")
+      self.client_var.set(info.client)
+      self.code_var.set(info.code)
+      self.description_var.set(info.description)
+      self.barcode_var.set(info.barcode)
+      self.quantity_var.set(info.quantity)
+      self.lot_var.set(1)
+
+      if self.client_input.get() == "":
+        ctkmsg(self.master, title="Aviso", message="Insira outra OP", option_1="OK", icon="warning")
+        return
+
+      self.client_input.insert(0, self.client_var.get())
+      self.code_input.insert(0, self.code_var.get())
+      self.description_input.insert(0, self.description_var.get())
+      self.barcode_input.insert(0, self.barcode_var.get())
+      self.quantity_input.insert(0, self.quantity_var.get())
+      self.lot_input.insert(0, self.lot_var.get())
+
+      if self.weight_var.get() != "off" or self.weight_input.get() != "":
+        return
+
+      serial_weight = self.weight_serial.read_serial()
+      self.weight_var.set(serial_weight)
+      self.weight_input.insert(0, self.weight_var.get())
+
+    except Exception as e:
+      ctkmsg(title="Erro", message=e ,option_1="OK", icon='cancel')
     
   def clear_inputs(self, event=None):
     self.id_input.delete(0, ctk.END)
@@ -177,24 +180,26 @@ class Interface:
     quantity = int(self.quantity_input.get())
     lot = int(self.lot_input.get())
 
-    if quantity % lot == 0:
-      self.lot_quantity = int(quantity/lot)
-
-      if self.weight_input.get()!="":
-        try:
-          label = LabelPrint(LabelInfo(self.client_input.get(), self.code_input.get(), self.description_input.get(), self.lot_quantity, self.weight_input.get()))
-          label.create_label()
-          time.sleep(0.5)
-          
-          for _ in range(int(self.lot_input.get())):
-            time.sleep(0.5)
-            label.print_label()
-
-        except Exception as e:
-          ctkmsg(self.master, message=f"Erro ao imprimir: {e}", title="Erro", icon="cancel", option_1="OK")
-        finally:
-          self.clear_inputs()
-      else:
-        ctkmsg(self.master, title="Aviso", message="Campo de peso está vazio, por favor preencha!", icon='warning', option_1="OK")
-    else:
+    if quantity % lot != 0:
       ctkmsg(self.master, title="Erro", message="Quantidade total não pode ser divisível pelo número de caixas", icon='warning', option_1="OK")
+      self.lot_quantity = int(quantity/lot)
+      return
+
+    if self.weight_input.get() == "":
+      ctkmsg(self.master, title="Aviso", message="Campo de peso está vazio, por favor preencha!", icon='warning', option_1="OK")
+      return
+    
+    try:
+      label = LabelPrint(LabelInfo(self.client_input.get(), self.code_input.get(), self.description_input.get(), self.lot_quantity, self.weight_input.get()))
+      label.create_label()
+      time.sleep(0.5)
+      
+      for _ in range(int(self.lot_input.get())):
+        time.sleep(0.5)
+        label.print_label()
+
+    except Exception as e:
+      ctkmsg(self.master, message=f"Erro ao imprimir: {e}", title="Erro", icon="cancel", option_1="OK")
+    
+    finally:
+      self.clear_inputs()
