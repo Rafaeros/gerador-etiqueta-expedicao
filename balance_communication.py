@@ -1,8 +1,9 @@
 import serial
 from time import sleep
 
-class Serial():
+class Serial(serial.Serial):
     def __init__(self):
+        super(Serial, self).__init__()
         self.set_baud_rate()
         self.set_timeout()
 
@@ -28,15 +29,13 @@ class Serial():
     def read_serial(self) -> str:
         while True:
                 # Obtendo resposta da balança e formatando o o peso
-                response = self.serial.readline().decode().strip()
-                if(response and response[0]=="D"):
+                response = self.serial.read_all().decode('utf-8').strip()
+                if(response[0]=="D"):
                     try:
-                        weight = response[1:].split('#')[0]
+                        weight = response[1:]
                         weight = float(weight)
                         formatted_weight = f"{weight:.2f}".lstrip('0').rstrip('.')
-                        
                         formatted_weight = formatted_weight.replace('.', ',')
-
                         return formatted_weight
                     except ValueError:
                         print(f'Erro ao converter "{response}" para float.')
