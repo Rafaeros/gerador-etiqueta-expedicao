@@ -3,6 +3,14 @@ import threading
 from time import sleep
 
 class Serial(serial.Serial):
+    running: bool
+    weight: float
+    baud_rate: int
+    port: str
+    timeout: int
+    serial: serial.Serial
+    stable: bool
+    
     def __init__(self):
         super(Serial, self).__init__()
         
@@ -37,19 +45,17 @@ class Serial(serial.Serial):
                 sleep(0.5)
                 # Obtendo resposta da balança e formatando o o peso
                 response = self.serial.readline().decode('utf-8').strip()
-                if(response[0]=="D"):
-                    try:
-                        weight = response[1:]
-                        weight = float(weight)
-                        formatted_weight = f"{weight:.2f}".lstrip('0').rstrip('.')
-                        formatted_weight = formatted_weight.replace('.', ',')
-                        self.weight = formatted_weight
-                        print(self.weight)
-                    except ValueError:
-                        print(f'Erro ao converter "{response}" para float.')
-                        continue
-                # Leitura a cada 0.5 segundos
-                sleep(0.5)
+                if response[0] != "D":
+                    stable = False
+                    continue
+                try:
+                    stable = True
+                    self.weight = float(weight[1:])
+                    print(self.weight)
+                except ValueError:
+                    print(f'Erro ao converter "{response}" para float.')
+                    stable = False
+                    continue
 
     def get_weight(self):
         return self.weight
