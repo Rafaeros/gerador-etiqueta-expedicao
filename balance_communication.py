@@ -8,7 +8,6 @@ class Serial(serial.Serial):
     baud_rate: int
     port: str
     timeout: int
-    serial: serial.Serial
     stable: bool
     
     def __init__(self):
@@ -16,6 +15,7 @@ class Serial(serial.Serial):
         
         self.set_baud_rate()
         self.set_timeout()
+
         self.running = True
         self.weight = None
         self.thread = threading.Thread(target=self.read_serial)
@@ -50,8 +50,8 @@ class Serial(serial.Serial):
                     continue
                 try:
                     stable = True
+                    weight = response[1:]
                     self.weight = float(weight[1:])
-                    print(self.weight)
                 except ValueError:
                     print(f'Erro ao converter "{response}" para float.')
                     stable = False
@@ -62,4 +62,5 @@ class Serial(serial.Serial):
 
     def stop(self):
         self.running = False
+        self.serial.close()
         self.thread.join()

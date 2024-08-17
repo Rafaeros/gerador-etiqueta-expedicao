@@ -19,9 +19,8 @@ class Interface:
     self.master.mainloop()
 
   def on_closing(self):
-    print(self.weight_serial.is_open)
-    if(self.weight_serial.is_open):
-      self.weight_serial.close()
+    if self.serial_com.is_open:
+      self.serial_com.close()
     self.master.destroy()
 
   def create_variables(self):
@@ -34,17 +33,17 @@ class Interface:
       if msg.get() == "OK":
         self.master.destroy()
     
-    self.weight_serial = Serial()
-    self.client_var = ctk.StringVar()
-    self.code_var = ctk.StringVar()
-    self.description_var = ctk.StringVar()
-    self.barcode_var = ctk.StringVar()
-    self.quantity_var = ctk.IntVar()
-    self.weight_var = ctk.StringVar()
-    self.lot_var = ctk.IntVar()
-    self.manual_weight_var = ctk.StringVar(value="off")
+    self.serial_com = Serial()
+    self.client_var: str = ctk.StringVar()
+    self.code_var: str = ctk.StringVar()
+    self.description_var: str = ctk.StringVar()
+    self.barcode_var: str = ctk.StringVar()
+    self.quantity_var: str = ctk.IntVar()
+    self.weight_var: str = ctk.StringVar()
+    self.lot_var: int = ctk.IntVar()
+    self.manual_weight_var: str = ctk.StringVar(value="on")
     self.lot_quantity = ''
-    self.id = ''
+    self.id: str = ''
 
   def create_window(self):
     self.id_label = ctk.CTkLabel(self.master, text="Número da OP:")
@@ -55,7 +54,7 @@ class Interface:
     self.clear_inputs_button = ctk.CTkButton(self.master, text="Limpar", command=self.clear_inputs, fg_color='red', height=35, corner_radius=10)
     self.clear_inputs_button.bind('<Delete>', self.clear_inputs)
 
-    self.weight_serial_port_menu = ctk.CTkOptionMenu(self.master, values=["COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7"], command=self.serial_port_callback)
+    self.serial_com_port_menu = ctk.CTkOptionMenu(self.master, values=["COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7"], command=self.serial_port_callback)
 
     self.client_label = ctk.CTkLabel(self.master, text="Cliente:")
     self.client_input = ctk.CTkEntry(self.master, placeholder_text="Cliente do Produto", width=550, height=35)
@@ -72,7 +71,7 @@ class Interface:
     self.quantity_label = ctk.CTkLabel(self.master, text="Quantidade Total:")
     self.quantity_input = ctk.CTkEntry(self.master, placeholder_text="Quantidade Total", width=200, height=35)
 
-    self.manual_weight_checkbox = ctk.CTkCheckBox(self.master, text="Inserir Peso Manualmente", onvalue="on", offvalue="off", command=self.manual_weight_callback, variable=self.weight_var)
+    self.manual_weight_checkbox = ctk.CTkCheckBox(self.master, text="Inserir Peso Manualmente", onvalue="on", offvalue="off", variable=self.manual_weight_var, command=self.manual_weight_callback)
 
     self.weight_label = ctk.CTkLabel(self.master, text="Peso: ")
     self.weight_input = ctk.CTkEntry(self.master, placeholder_text="Peso: 0,00 Kg")
@@ -89,7 +88,7 @@ class Interface:
     self.search_button.grid(row=0, column=3, **padding)
     self.clear_inputs_button.grid(row=1, column=3, **padding)
 
-    self.weight_serial_port_menu.grid(row=0, column=4, **padding)
+    self.serial_com_port_menu.grid(row=0, column=4, **padding)
 
     self.code_label.grid(row=1, column=1, **padding)
     self.code_input.grid(row=1,column=2, **padding)
@@ -116,18 +115,15 @@ class Interface:
     self.print_button.grid(row=10, column=2, columnspan=3, pady=20)
 
   def serial_port_callback(self, choice: str):
-    if(self.weight_serial.is_open):
-      self.weight_serial.close()
+    if self.serial_com.is_open:
+      self.serial_com.close()
 
-    self.weight_serial.set_port(choice)
-    response = self.weight_serial.connect()
+    self.serial_com.set_port(choice)
+    response = self.serial_com.connect()
     ctkmsg(self.master, title="Comunicação Serial", message=response, option_1="OK")
 
   def manual_weight_callback(self):
-    if self.manual_weight_var.get() == 'off':
-      self.manual_weight_var.set('on')
-    else:
-      self.manual_weight_var.set('off')
+    print("Manual weight chekbox value: ", self.manual_weight_var.get())
 
   def search_id(self, event=None):
     self.id = f"OP-{self.id_input.get().zfill(7)}"
@@ -145,7 +141,7 @@ class Interface:
       self.quantity_var.set(info.quantity)
       self.lot_var.set(1)
 
-      if self.client_input.get() == "":
+      if self.client_input.get() != "":
         ctkmsg(self.master, title="Aviso", message="Insira outra OP", option_1="OK", icon="warning")
         return
 
@@ -156,12 +152,13 @@ class Interface:
       self.quantity_input.insert(0, self.quantity_var.get())
       self.lot_input.insert(0, self.lot_var.get())
 
-      if self.weight_var.get() != "off" or self.weight_input.get() != "":
-        return
-
-      serial_weight = self.weight_serial.read_serial()
-      self.weight_var.set(serial_weight)
-      self.weight_input.insert(0, self.weight_var.get())
+      
+      if self.manual_weight_var.get() == "off":
+        weight: float = self.serial_com.get_weight()
+        str_weight: str = f"{weight:.2f}"
+        str_weight: str = str_weight.replace(".", ",")
+        self.weight_var.set(str_weight)
+        self.weight_input.insert(0, self.weight_var.get())
 
     except Exception as e:
       ctkmsg(title="Erro", message=e ,option_1="OK", icon='cancel')
