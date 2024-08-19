@@ -155,10 +155,11 @@ class Interface:
       
       if self.manual_weight_var.get() == "off":
         weight: float = self.serial_com.get_weight()
-        str_weight: str = f"{weight:.2f}"
+        """ str_weight: str = f"{weight:.2f}"
+        print("PESO PUXADO:", str_weight)
         str_weight: str = str_weight.replace(".", ",")
-        self.weight_var.set(str_weight)
-        self.weight_input.insert(0, self.weight_var.get())
+        self.weight_var.set(str_weight) """
+        self.weight_input.insert(0, weight)
 
     except Exception as e:
       ctkmsg(title="Erro", message=e ,option_1="OK", icon='cancel')
