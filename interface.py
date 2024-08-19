@@ -155,11 +155,10 @@ class Interface:
       
       if self.manual_weight_var.get() == "off":
         weight: float = self.serial_com.get_weight()
-        """ str_weight: str = f"{weight:.2f}"
-        print("PESO PUXADO:", str_weight)
+        str_weight: str = f"{weight:.2f}"
         str_weight: str = str_weight.replace(".", ",")
-        self.weight_var.set(str_weight) """
-        self.weight_input.insert(0, weight)
+        self.weight_var.set(str_weight)
+        self.weight_input.insert(0, self.weight_var.get())
 
     except Exception as e:
       ctkmsg(title="Erro", message=e ,option_1="OK", icon='cancel')
@@ -178,26 +177,26 @@ class Interface:
     quantity = int(self.quantity_input.get())
     lot = int(self.lot_input.get())
 
-    if quantity % lot != 0:
-      ctkmsg(self.master, title="Erro", message="Quantidade total não pode ser divisível pelo número de caixas", icon='warning', option_1="OK")
+    if quantity % lot == 0:
       self.lot_quantity = int(quantity/lot)
-      return
 
-    if self.weight_input.get() == "":
-      ctkmsg(self.master, title="Aviso", message="Campo de peso está vazio, por favor preencha!", icon='warning', option_1="OK")
-      return
-    
-    try:
-      label = LabelPrint(LabelInfo(self.client_input.get(), self.code_input.get(), self.description_input.get(), self.lot_quantity, self.weight_input.get()))
-      label.create_label()
-      time.sleep(0.5)
+      if self.weight_input.get() == "":
+        ctkmsg(self.master, title="Aviso", message="Campo de peso está vazio, por favor preencha!", icon='warning', option_1="OK")
+        return
       
-      for _ in range(int(self.lot_input.get())):
+      try:
+        label = LabelPrint(LabelInfo(self.client_input.get(), self.code_input.get(), self.description_input.get(), self.lot_quantity, self.weight_input.get()))
+        label.create_label()
         time.sleep(0.5)
-        label.print_label()
+        
+        for _ in range(int(self.lot_input.get())):
+          time.sleep(0.5)
+          label.print_label()
 
-    except Exception as e:
-      ctkmsg(self.master, message=f"Erro ao imprimir: {e}", title="Erro", icon="cancel", option_1="OK")
-    
-    finally:
-      self.clear_inputs()
+      except Exception as e:
+        ctkmsg(self.master, message=f"Erro ao imprimir: {e}", title="Erro", icon="cancel", option_1="OK")
+      
+      finally:
+        self.clear_inputs()
+    else:
+      ctkmsg(self.master, title="Erro", message="Quantidade total não pode ser divisível pelo número de caixas", icon='warning', option_1="OK")
