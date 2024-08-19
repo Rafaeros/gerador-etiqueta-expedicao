@@ -154,7 +154,8 @@ class Interface:
 
       
       if self.manual_weight_var.get() == "off":
-        weight: float = self.serial_com.get_weight()
+        time.sleep(0.1)
+        weight = self.serial_com.get_weight()
         str_weight: str = f"{weight:.2f}"
         str_weight: str = str_weight.replace(".", ",")
         self.weight_var.set(str_weight)
