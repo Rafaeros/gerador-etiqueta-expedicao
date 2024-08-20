@@ -26,7 +26,7 @@ class Serial(serial.Serial):
     def set_baud_rate(self, rate=9600):
         self.baud_rate: int = rate
 
-    def set_timeout(self, timeout=0.2):
+    def set_timeout(self, timeout=0.01):
         self.timeout: int = timeout
 
     def connect(self) -> str:
@@ -49,6 +49,7 @@ class Serial(serial.Serial):
                     try:
                         weight = float(response[1:])
                         self.weight = weight
+                        self.serial.reset_input_buffer()
                     except ValueError:
                         print(f'Erro ao converter "{response}" para float.')
 
@@ -59,3 +60,6 @@ class Serial(serial.Serial):
         self.running = False
         self.serial.close()
         self.thread.join()
+    
+    def close(self):
+        self.serial.close()
