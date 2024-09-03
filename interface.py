@@ -154,7 +154,8 @@ class Interface:
 
       
       if self.manual_weight_var.get() == "off":
-        weight: float = self.serial_com.get_weight()
+        time.sleep(0.1)
+        weight = self.serial_com.get_weight()
         str_weight: str = f"{weight:.2f}"
         str_weight: str = str_weight.replace(".", ",")
 
@@ -179,7 +180,6 @@ class Interface:
     lot = int(self.lot_input.get())
 
     if quantity % lot == 0:
-      
       self.lot_quantity = int(quantity/lot)
 
       if self.weight_input.get() == "":
@@ -189,10 +189,10 @@ class Interface:
       try:
         label = LabelPrint(LabelInfo(self.client_input.get(), self.code_input.get(), self.description_input.get(), self.lot_quantity, self.weight_input.get()))
         label.create_label()
-        time.sleep(0.1)
+        time.sleep(0.5)
         
         for _ in range(int(self.lot_input.get())):
-          time.sleep(0.1)
+          time.sleep(0.5)
           label.print_label()
 
       except Exception as e:
@@ -200,6 +200,5 @@ class Interface:
       
       finally:
         self.clear_inputs()
-
     else:
       ctkmsg(self.master, title="Erro", message="Quantidade total não pode ser divisível pelo número de caixas", icon='warning', option_1="OK")

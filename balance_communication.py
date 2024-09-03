@@ -26,7 +26,7 @@ class Serial(serial.Serial):
     def set_baud_rate(self, rate=9600):
         self.baud_rate: int = rate
 
-    def set_timeout(self, timeout=1):
+    def set_timeout(self, timeout=0.01):
         self.timeout: int = timeout
 
     def connect(self) -> str:
@@ -42,20 +42,19 @@ class Serial(serial.Serial):
 
     def read_serial(self) -> str:
         while self.running:
-                sleep(0.5)
+                sleep(0.2)
                 # Obtendo resposta da balança e formatando o o peso
-                response = self.serial.readline().decode('utf-8').strip()
-                if response[0] != "D":
-                    stable = False
-                    continue
-                try:
-                    stable = True
-                    weight = response[1:]
-                    self.weight = float(weight[1:])
-                except ValueError:
-                    print(f'Erro ao converter "{response}" para float.')
-                    stable = False
-                    continue
+                response = self.serial.read(9).decode('utf-8').split('\r')[0]
+                
+                if response[0] == "D":
+                    try:
+                        weight = float(response[1:])
+                        self.weight = weight
+                        self.serial.reset_input_buffer()
+                    except ValueError:
+                        print(f'Erro ao converter "{response}" para float.')
+
+                self.serial.reset_input_buffer()
 
     def get_weight(self):
         return self.weight
@@ -64,3 +63,6 @@ class Serial(serial.Serial):
         self.running = False
         self.serial.close()
         self.thread.join()
+    
+    def close(self):
+        self.serial.close()
