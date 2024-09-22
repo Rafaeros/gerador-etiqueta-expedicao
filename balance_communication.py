@@ -3,20 +3,27 @@ import threading
 from time import sleep
 
 class Serial(serial.Serial): 
-    def __init__(self, port: str, baudrate: int = 9600, timeout: float = 0.01) -> None:
-        super(Serial, self).__init__(port=port, baudrate=baudrate, timeout=timeout)
-
+    def __init__(self) -> None:
+        self.set_port()
+        self.set_baudrate()
+        self.set_timeout()
         self.running = True
         self.weight = None
         self.thread = threading.Thread(target=self.read_serial)
 
-    def set_port(self, port) -> None:
+    def set_port(self, port: str ="COM3") -> None:
         self.port: str = port
+
+    def set_baudrate(self, baudrate: int = 9600) -> None:
+        self.baudrate = baudrate
+    
+    def set_timeout(self, timeout: int = 0.01) -> None:
+        self.timeout = timeout
 
     def connect(self) -> str:
         try:
             # Abrindo a conexão serial
-            self.serial = serial.Serial(self.port, self.baud_rate, timeout=self.timeout)
+            self.serial = super(Serial, self).__init__(port=self.port, baudrate=self.baudrate, timeout=self.timeout)
             self.thread.start()
             sleep(0.5)
             return f"Conectado a porta {self.port} com sucesso:"
