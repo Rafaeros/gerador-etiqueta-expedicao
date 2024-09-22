@@ -2,39 +2,23 @@ import serial
 import threading
 from time import sleep
 
-class Serial(serial.Serial):
-    running: bool
-    weight: float
-    baud_rate: int
-    port: str
-    timeout: int
-    stable: bool
-    
-    def __init__(self):
-        super(Serial, self).__init__()
-        
-        self.set_baud_rate()
-        self.set_timeout()
+class Serial(serial.Serial): 
+    def __init__(self, port: str, baudrate: int = 9600, timeout: float = 0.01) -> None:
+        super(Serial, self).__init__(port=port, baudrate=baudrate, timeout=timeout)
 
         self.running = True
         self.weight = None
         self.thread = threading.Thread(target=self.read_serial)
 
-    def set_port(self, port):
+    def set_port(self, port) -> None:
         self.port: str = port
-
-    def set_baud_rate(self, rate=9600):
-        self.baud_rate: int = rate
-
-    def set_timeout(self, timeout=0.01):
-        self.timeout: int = timeout
 
     def connect(self) -> str:
         try:
             # Abrindo a conexão serial
             self.serial = serial.Serial(self.port, self.baud_rate, timeout=self.timeout)
-            sleep(0.5)
             self.thread.start()
+            sleep(0.5)
             return f"Conectado a porta {self.port} com sucesso:"
 
         except serial.SerialException as e:
@@ -56,13 +40,12 @@ class Serial(serial.Serial):
 
                 self.serial.reset_input_buffer()
 
-    def get_weight(self):
+    def get_weight(self) -> float:
         return self.weight
 
-    def stop(self):
+    def stop(self) -> None:
         self.running = False
-        self.serial.close()
-        self.thread.join()
-    
-    def close(self):
-        self.serial.close()
+        if self.is_open:
+             super().close()  # Fecha a porta serial
+        if self.thread.is_alive():
+            self.thread.join()  # Aguarda o término da thread

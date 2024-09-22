@@ -19,8 +19,8 @@ class Interface:
     self.master.mainloop()
 
   def on_closing(self) -> None:
-    if self.serial_com.is_open:
-      self.serial_com.close()
+    if self.serial_com.is_open():
+      self.serial_com.stop()
     self.master.destroy()
 
   def create_variables(self) -> None:
@@ -115,9 +115,6 @@ class Interface:
     self.print_button.grid(row=10, column=2, columnspan=3, pady=20)
 
   def serial_port_callback(self, choice: str) -> None:
-    if self.serial_com.is_open:
-      self.serial_com.close()
-
     self.serial_com.set_port(choice)
     response = self.serial_com.connect()
     ctkmsg(self.master, title="Comunicação Serial", message=response, option_1="OK")
