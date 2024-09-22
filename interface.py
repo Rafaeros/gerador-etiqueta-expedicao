@@ -189,11 +189,10 @@ class Interface:
         return
       
       try:
-        label = LabelPrint(LabelInfo(self.client_input.get(), self.code_input.get(), self.description_input.get(), self.lot_quantity, self.box_input.get(), self.weight_input.get()))
-        label.create_label()
-        time.sleep(0.5)
-        
         for _ in range(int(self.box_input.get())):
+          boxes = f"{_+1}/{self.box_input.get()}"
+          label = LabelPrint(LabelInfo(self.client_input.get(), self.code_input.get(), self.description_input.get(), self.lot_quantity, boxes, self.weight_input.get()))
+          label.create_label()
           time.sleep(0.5)
           label.print_label()
 

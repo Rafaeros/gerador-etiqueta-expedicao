@@ -93,6 +93,10 @@ class LabelPrint():
     # Posição dos elementos
     # Data
     date_x, date_y = 10*mm, height-25*mm
+
+    # Lote das caixas
+    boxes_x, boxes_y = 50*mm, height-25*mm
+
     # Linha horizontal
     line_x1, line_y1, line_x2, line_y2 = 0, height-30*mm, width, height-30*mm
     # Cliente
@@ -114,6 +118,9 @@ class LabelPrint():
     #Inserindo elementos
     # Data
     self.draw_text(pdf, f"{self.label_info.date}", date_x, date_y, max_width, 12)
+
+    # Lote das caixas
+    self.draw_text(pdf, f"{self.label_info.boxes}", boxes_x, boxes_y, max_width, 12)
 
     # Linha Divisória
     pdf.line(line_x1, line_y1, line_x2, line_y2)
