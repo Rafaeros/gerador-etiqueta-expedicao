@@ -6,7 +6,7 @@ from balance_communication import Serial
 import time
 
 class Interface:
-  def __init__(self):
+  def __init__(self) -> None:
     self.master = ctk.CTk()
     self.master.geometry("800x600")
     self.master.resizable(False, False)
@@ -15,15 +15,15 @@ class Interface:
     self.create_variables()
     self.create_window()
 
-  def run(self):
+  def run(self) -> None:
     self.master.mainloop()
 
-  def on_closing(self):
+  def on_closing(self) -> None:
     if self.serial_com.is_open:
       self.serial_com.close()
     self.master.destroy()
 
-  def create_variables(self):
+  def create_variables(self) -> None:
     try:
       self.label_data = LabelData()
       self.label_data_df = self.label_data.label_data
@@ -40,12 +40,12 @@ class Interface:
     self.barcode_var = ctk.StringVar()
     self.quantity_var  = ctk.IntVar()
     self.weight_var = ctk.StringVar()
-    self.lot_var = ctk.IntVar()
+    self.box_var = ctk.IntVar()
     self.manual_weight_var = ctk.StringVar(value="on")
     self.lot_quantity = ''
     self.id= ''
 
-  def create_window(self):
+  def create_window(self) -> None:
     self.id_label = ctk.CTkLabel(self.master, text="Número da OP:")
     self.id_input = ctk.CTkEntry(self.master, placeholder_text="Digite o número da OP")
     self.id_input.bind('<Return>', self.search_id)
@@ -76,8 +76,8 @@ class Interface:
     self.weight_label = ctk.CTkLabel(self.master, text="Peso: ")
     self.weight_input = ctk.CTkEntry(self.master, placeholder_text="Peso: 0,00 Kg")
 
-    self.lot_label = ctk.CTkLabel(self.master, text="Insira a quantidade de caixas:")
-    self.lot_input = ctk.CTkEntry(self.master, placeholder_text="N° de caixas:")
+    self.box_label = ctk.CTkLabel(self.master, text="Insira a quantidade de caixas:")
+    self.box_input = ctk.CTkEntry(self.master, placeholder_text="N° de caixas:")
 
     self.print_button = ctk.CTkButton(self.master, text="Imprimir", command=self.print_label, width=150, height=50, corner_radius=10)
 
@@ -102,8 +102,8 @@ class Interface:
     self.barcode_label.grid(row=6, column=1, **padding)
     self.barcode_input.grid(row=6, column=2, **padding)
 
-    self.lot_label.grid(row=6, column=3)
-    self.lot_input.grid(row=6, column=4)
+    self.box_label.grid(row=6, column=3)
+    self.box_input.grid(row=6, column=4)
 
     self.quantity_label.grid(row=7, column=1, **padding)
     self.quantity_input.grid(row=7, column=2, **padding)
@@ -114,7 +114,7 @@ class Interface:
 
     self.print_button.grid(row=10, column=2, columnspan=3, pady=20)
 
-  def serial_port_callback(self, choice: str):
+  def serial_port_callback(self, choice: str) -> None:
     if self.serial_com.is_open:
       self.serial_com.close()
 
@@ -122,10 +122,10 @@ class Interface:
     response = self.serial_com.connect()
     ctkmsg(self.master, title="Comunicação Serial", message=response, option_1="OK")
 
-  def manual_weight_callback(self):
+  def manual_weight_callback(self) -> None:
     print("Manual weight chekbox value: ", self.manual_weight_var.get())
 
-  def search_id(self, event=None):
+  def search_id(self, event=None) -> None:
     self.id = f"OP-{self.id_input.get().zfill(7)}"
     
     if not (self.label_data_df['Código'] == self.id).any():
@@ -133,13 +133,13 @@ class Interface:
       return
       
     try:
-      info = self.label_data.get_data(self.id, "")
+      info = self.label_data.get_data(self.id, 1, "")
       self.client_var.set(info.client)
       self.code_var.set(info.code)
       self.description_var.set(info.description)
       self.barcode_var.set(info.barcode)
       self.quantity_var.set(info.quantity)
-      self.lot_var.set(1)
+      self.box_var.set(1)
 
       if self.client_input.get() != "":
         ctkmsg(self.master, title="Aviso", message="Insira outra OP", option_1="OK", icon="warning")
@@ -150,22 +150,20 @@ class Interface:
       self.description_input.insert(0, self.description_var.get())
       self.barcode_input.insert(0, self.barcode_var.get())
       self.quantity_input.insert(0, self.quantity_var.get())
-      self.lot_input.insert(0, self.lot_var.get())
+      self.box_input.insert(0, self.box_var.get())
 
-      
       if self.manual_weight_var.get() == "off":
         time.sleep(0.1)
         weight = self.serial_com.get_weight()
         str_weight: str = f"{weight:.2f}"
         str_weight: str = str_weight.replace(".", ",")
-
         self.weight_var.set(str_weight)
         self.weight_input.insert(0, self.weight_var.get())
 
     except Exception as e:
       ctkmsg(title="Erro", message=e ,option_1="OK", icon='cancel')
     
-  def clear_inputs(self, event=None):
+  def clear_inputs(self, event=None) -> None:
     self.id_input.delete(0, ctk.END)
     self.client_input.delete(0, ctk.END)
     self.code_input.delete(0, ctk.END)
@@ -173,11 +171,15 @@ class Interface:
     self.barcode_input.delete(0, ctk.END)
     self.quantity_input.delete(0, ctk.END)
     self.weight_input.delete(0, ctk.END)
-    self.lot_input.delete(0, ctk.END)
+    self.box_input.delete(0, ctk.END)
 
-  def print_label(self):
+  def print_label(self) -> None:
+    if self.code_input.get() == "":
+      ctkmsg(self.master, title="Aviso", message="Insira alguma OP para imprimir", icon='warning', option_1="OK")
+      return
+    
     quantity = int(self.quantity_input.get())
-    lot = int(self.lot_input.get())
+    lot = int(self.box_input.get())
 
     if quantity % lot == 0:
       self.lot_quantity = int(quantity/lot)
@@ -187,11 +189,11 @@ class Interface:
         return
       
       try:
-        label = LabelPrint(LabelInfo(self.client_input.get(), self.code_input.get(), self.description_input.get(), self.lot_quantity, self.weight_input.get()))
+        label = LabelPrint(LabelInfo(self.client_input.get(), self.code_input.get(), self.description_input.get(), self.lot_quantity, self.box_input.get(), self.weight_input.get()))
         label.create_label()
         time.sleep(0.5)
         
-        for _ in range(int(self.lot_input.get())):
+        for _ in range(int(self.box_input.get())):
           time.sleep(0.5)
           label.print_label()
 

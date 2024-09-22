@@ -19,7 +19,7 @@ from win32 import win32print, win32api
 import os
 
 class LabelPrint():
-  def __init__(self, LabelInfo):
+  def __init__(self, LabelInfo) -> None:
     self.label_info = LabelInfo
 
   def get_string_width(self, text, font_name, font_size):
@@ -82,7 +82,7 @@ class LabelPrint():
     barcode.drawOn(canvas, x / scale, y)  # Ajusta a posição para considerar a escala
     canvas.restoreState()
 
-  def create_label(self):
+  def create_label(self) -> None:
     # Dimensões da etiqueta
     width = 150*mm
     height = 100*mm
@@ -141,13 +141,12 @@ class LabelPrint():
 
     pdf.save()
 
-  def print_label(self, file_path = './etq.pdf'):
-    abs_file_path = os.path.abspath(file_path)
+  def print_label(self, file_path: str = './etq.pdf') -> None:
+    abs_file_path: str = os.path.abspath(file_path)
     
     # Configuração impressora
-    default_printer = win32print.GetDefaultPrinter()
+    default_printer: str = win32print.GetDefaultPrinter()
     hprinter = win32print.OpenPrinter(default_printer)
-    printer_info = win32print.GetPrinter(hprinter)
 
     try:  
       win32api.ShellExecute(0,"print", abs_file_path, None, ".", 0)
