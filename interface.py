@@ -31,7 +31,6 @@ class Interface:
         self.manual_weight_var = ctk.StringVar(value="on")
         self.lot_quantity = ''
         self.op= ''
-
         self.create_window()
 
     def run(self) -> None:

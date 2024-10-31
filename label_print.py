@@ -10,6 +10,7 @@ from barcode import Code128, Code39
 from barcode.writer import ImageWriter
 from win32 import win32print, win32api
 from get_data import LabelInfo
+import zpl
 
 class LabelPrint():
     """
@@ -352,8 +353,13 @@ class LabelPrint():
         # Configuração da impressora
         default_printer: str = win32print.GetDefaultPrinter()
         printer = win32print.OpenPrinter(default_printer)
+        
+        l = zpl.Label(100, 150)
+        l._convert_image(Image.open(abs_file_path), 100, 150)
+
         try:
-            win32api.ShellExecute(0, "print", abs_file_path, f'"{default_printer}', ".", 0)
+            l.print_graphic('etq', scale_x=1, scale_y=1)
+            #win32api.ShellExecute(0, "print", abs_file_path, f'"{default_printer}', ".", 0)
         except FileNotFoundError:
             print(f"Erro: Arquivo '{abs_file_path}' não encontrado.")
         except PermissionError:
