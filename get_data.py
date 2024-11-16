@@ -98,5 +98,5 @@ class LabelData:
                 kg
             )
             return current_label
-        except Exception as e:
+        except ValueError as e:
             print(e)
