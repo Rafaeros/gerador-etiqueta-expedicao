@@ -1,4 +1,5 @@
 """Interface module."""
+import os
 import time
 import webbrowser as web
 import customtkinter as ctk
@@ -8,8 +9,24 @@ from get_data import LabelData, LabelInfo
 from label_print import LabelPrint
 from balance_communication import Serial
 
+LABEL_PATH: str = "./tmp/labels/"
+
+
 class Interface:
     """Interface class."""
+    padding: dict = {
+        'padx': 5,
+        'pady': 10
+    }
+    op_input: ctk.CTkEntry
+    client_input: ctk.CTkEntry
+    code_input: ctk.CTkEntry
+    description_input: ctk.CTkEntry
+    quantity_input: ctk.CTkEntry
+    weight_input: ctk.CTkEntry
+    barcode_input: ctk.CTkEntry
+    box_input: ctk.CTkEntry
+
     def __init__(self) -> None:
         """ Initialize the interface. """
         self.master = ctk.CTk()
@@ -25,13 +42,16 @@ class Interface:
         self.code_var = ctk.StringVar()
         self.description_var = ctk.StringVar()
         self.barcode_var = ctk.StringVar()
-        self.quantity_var  = ctk.IntVar()
+        self.quantity_var = ctk.IntVar()
         self.weight_var = ctk.StringVar()
         self.box_var = ctk.IntVar()
         self.manual_weight_var = ctk.StringVar(value="on")
         self.lot_quantity = ''
-        self.op= ''
+        self.op = ''
         self.create_window()
+
+        if not os.path.exists(LABEL_PATH):
+            os.makedirs(LABEL_PATH)
 
     def run(self) -> None:
         """
@@ -58,7 +78,8 @@ class Interface:
         except FileNotFoundError as e:
             msg = ctkmsg(self.master,
                          title="Erro ao carregar planilha",
-                         message=f"Não encontrado o arquivo: ordens.xlsx com a data de hoje ({e})",
+                         message=f"Não encontrado o arquivo: ordens.xlsx com a data de hoje ({
+                             e})",
                          icon="warning", option_1="OK")
             msg.wait_window()
             if msg.get() == "OK":
@@ -68,75 +89,112 @@ class Interface:
         """
         Create the window.
         """
-        padding: dict = {
-            'padx': 5,
-            'pady': 10
-        }
+        self.create_labels()
+        self.create_inputs()
+        self.create_buttons()
 
+        self.serial_menu = ctk.CTkOptionMenu(
+            self.master,
+            values=["COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7"],
+            command=self.serial_port_callback).grid(row=0, column=4, **self.padding
+                                                    )
+        self.manual_weight_var = ctk.StringVar(value="off")
+
+        self.manual_weight_checkbox = ctk.CTkCheckBox(self.master,
+                                                      text="Inserir Peso Manualmente",
+                                                      onvalue="on",
+                                                      offvalue="off",
+                                                      variable=self.manual_weight_var,
+                                                      command=self.manual_weight_callback
+                                                      ).grid(row=8, column=3)
+
+    def create_labels(self) -> None:
+        """
+        Create the labels on the interface.
+        """
         labels = [
             {
-                'label_name': 'op_label', 
-                'label_text': 'Número da OP:', 
-                'row': 0, 'column': 1, 
-                'padding': padding
+                'label_name': 'op_label',
+                'label_text': 'Número da OP:',
+                'row': 0, 'column': 1,
+                'self.padding': self.padding
             },
             {
-                'label_name': 'code_label', 
-                'label_text': 'Código:', 
-                'row': 1, 
-                'column': 1, 
-                'padding': padding
+                'label_name': 'code_label',
+                'label_text': 'Código:',
+                'row': 1,
+                'column': 1,
+                'self.padding': self.padding
             },
             {
-                'label_name': 'client_label', 
-                'label_text': 
-                'Cliente:', 
-                'row': 2, 
-                'column': 1, 
-                'padding': padding
+                'label_name': 'client_label',
+                'label_text':
+                'Cliente:',
+                'row': 2,
+                'column': 1,
+                'self.padding': self.padding
             },
             {
-                'label_name': 'description_label', 
-                'label_text': 'Descrição:', 
-                'row': 4, 'column': 1, 'padding': padding
+                'label_name': 'description_label',
+                'label_text': 'Descrição:',
+                'row': 4, 'column': 1, 'self.padding': self.padding
             },
             {
-                'label_name': 'barcode_label', 
-                'label_text': 'Código de barras:', 
-                'row': 6, 'column': 1, 'padding': padding
+                'label_name': 'barcode_label',
+                'label_text': 'Código de barras:',
+                'row': 6, 'column': 1, 'self.padding': self.padding
             },
             {
-                'label_name': 'quantity_label', 
-                'label_text': 'Quantidade Total:', 
-                'row': 7, 'column': 1, 'padding': padding
+                'label_name': 'quantity_label',
+                'label_text': 'Quantidade Total:',
+                'row': 7, 'column': 1, 'self.padding': self.padding
             },
             {
-                'label_name': 'box_label', 
-                'label_text': 'Caixas:', 'row': 6, 
-                'column': 3, 'padding': padding
+                'label_name': 'box_label',
+                'label_text': 'Caixas:', 'row': 6,
+                'column': 3, 'self.padding': self.padding
             },
             {
-                'label_name': 'weight_label', 
-                'label_text': 'Peso (Kg):', 'row': 7, 
-                'column': 3, 'padding': padding
+                'label_name': 'weight_label',
+                'label_text': 'Peso (Kg):', 'row': 7,
+                'column': 3, 'self.padding': self.padding
             },
             {
-                'label_name': 'author', 
-                'label_text': 'Autor: Rafael Costa', 
-                'row': 11, 
+                'label_name': 'author',
+                'label_text': 'Autor: Rafael Costa',
+                'row': 11,
                 'column': 4,
-                'padding': padding,
+                'self.padding': self.padding,
                 'bind': ('<Button-1>', lambda event: self.author_callback())
             },
         ]
 
+        # Instanciando as labels, inputs e buttons e configurando grids
+        for ctk_label in labels:
+            setattr(self, ctk_label['label_name'],
+                    ctk.CTkLabel(self.master, text=ctk_label['label_text']))
+
+            if 'bind' in ctk_label:
+                getattr(self, ctk_label['label_name']
+                        ).configure(text_color='#0000EE')
+                getattr(self, ctk_label['label_name']).bind(ctk_label['bind'][0],
+                                                            ctk_label['bind'][1])
+
+            getattr(self, ctk_label['label_name']).grid(row=ctk_label['row'],
+                                                        column=ctk_label['column'],
+                                                        **ctk_label['self.padding'])
+
+    def create_inputs(self) -> None:
+        """
+        Create the inputs on the interface.
+        """
         inputs = [
             {
                 'input_name': 'op_input',
                 'place_holder': 'Insira o número da OP',
-                'width': 300, 
-                'height': 28, 'row': 0, 
-                'column': 2, 'columnspan': 1, 
+                'width': 300,
+                'height': 28, 'row': 0,
+                'column': 2, 'columnspan': 1,
                 'bind': ('<Return>', self.search_id)
             },
             {
@@ -144,7 +202,7 @@ class Interface:
                 'place_holder': 'Insira o código do produto',
                 'width': 300, 'height': 35, 'row': 1, 'column': 2,
                 'columnspan': 1,
-                'padding': padding
+                'self.padding': self.padding
             },
             {
                 'input_name': 'client_input',
@@ -154,7 +212,7 @@ class Interface:
                 'row': 2,
                 'column': 2,
                 'columnspan': 3,
-                'padding': padding
+                'self.padding': self.padding
             },
             {
                 'input_name': 'description_input',
@@ -164,7 +222,7 @@ class Interface:
                 'row': 4,
                 'column': 2,
                 'columnspan': 3,
-                'padding': padding
+                'self.padding': self.padding
             },
             {
                 'input_name': 'barcode_input',
@@ -174,7 +232,7 @@ class Interface:
                 'row': 6,
                 'column': 2,
                 'columnspan': 1,
-                'padding': padding
+                'self.padding': self.padding
             },
             {
                 'input_name': 'quantity_input',
@@ -196,7 +254,7 @@ class Interface:
             },
             {
                 'input_name': 'weight_input',
-                'place_holder': 'Insira o peso', 
+                'place_holder': 'Insira o peso',
                 'width': 140,
                 'height': 28,
                 'row': 7,
@@ -205,6 +263,30 @@ class Interface:
             },
         ]
 
+        for ctk_input in inputs:
+            setattr(self, ctk_input['input_name'],
+                    ctk.CTkEntry(self.master,
+                                 placeholder_text=ctk_input['place_holder'],
+                                 width=ctk_input['width'],
+                                 height=ctk_input['height']))
+
+            if 'bind' in ctk_input:
+                getattr(self, ctk_input['input_name']).bind(ctk_input['bind'][0],
+                                                            ctk_input['bind'][1])
+            if 'self.padding' in ctk_input:
+                getattr(self, ctk_input['input_name']).grid(row=ctk_input['row'],
+                                                            column=ctk_input['column'],
+                                                            columnspan=ctk_input['columnspan'],
+                                                            **ctk_input['self.padding'])
+
+            getattr(self, ctk_input['input_name']).grid(row=ctk_input['row'],
+                                                        column=ctk_input['column'],
+                                                        columnspan=ctk_input['columnspan'])
+
+    def create_buttons(self) -> None:
+        """
+        Create the buttons on the interface.
+        """
         buttons = [
             {
                 'button_name': 'search_button',
@@ -214,7 +296,7 @@ class Interface:
                 'column': 3,
                 'columnspan': 1,
                 'corner_radius': 10,
-                'padding': padding,
+                'self.padding': self.padding,
                 'command': self.search_id,
                 'bind': ('<Return>', self.search_id)
             },
@@ -227,7 +309,7 @@ class Interface:
                 'column': 3,
                 'columnspan': 1,
                 'corner_radius': 10,
-                'padding': padding,
+                'self.padding': self.padding,
                 'command': self.clear_inputs,
                 'bind': ('<Return>', self.clear_inputs), 'fg_color': 'red'
             },
@@ -244,51 +326,17 @@ class Interface:
                 'command': self.print_label
             }
         ]
-
-        # Instanciando as labels, inputs e buttons e configurando grids
-        for ctk_label in labels:
-            setattr(self, ctk_label['label_name'],
-                    ctk.CTkLabel(self.master, text=ctk_label['label_text']))
-
-            if 'bind' in ctk_label:
-                getattr(self, ctk_label['label_name']).configure(text_color='#0000EE')
-                getattr(self, ctk_label['label_name']).bind(ctk_label['bind'][0],
-                                                            ctk_label['bind'][1])
-
-            getattr(self, ctk_label['label_name']).grid(row=ctk_label['row'],
-                                                        column=ctk_label['column'],
-                                                        **ctk_label['padding'])
-
-        for ctk_input in inputs:
-            setattr(self, ctk_input['input_name'],
-                    ctk.CTkEntry(self.master,
-                                  placeholder_text=ctk_input['place_holder'],
-                                  width=ctk_input['width'],
-                                  height=ctk_input['height']))
-
-            if 'bind' in ctk_input:
-                getattr(self, ctk_input['input_name']).bind(ctk_input['bind'][0],
-                                                            ctk_input['bind'][1])
-            if 'padding' in ctk_input:
-                getattr(self, ctk_input['input_name']).grid(row=ctk_input['row'],
-                                                            column=ctk_input['column'],
-                                                            columnspan=ctk_input['columnspan'],
-                                                            **ctk_input['padding'])
-
-            getattr(self, ctk_input['input_name']).grid(row=ctk_input['row'],
-                                                        column=ctk_input['column'],
-                                                        columnspan=ctk_input['columnspan'])
-
         for ctk_button in buttons:
             setattr(self, ctk_button['button_name'],
-                          ctk.CTkButton(self.master,
-                                        text=ctk_button['button_text'],
-                                        width=ctk_button['width'],
-                                        height=ctk_button['height'],
-                                        corner_radius=ctk_button['corner_radius'],
-                                        command=ctk_button['command']))
+                    ctk.CTkButton(self.master,
+                                  text=ctk_button['button_text'],
+                                  width=ctk_button['width'],
+                                  height=ctk_button['height'],
+                                  corner_radius=ctk_button['corner_radius'],
+                                  command=ctk_button['command']))
             if 'fg_color' in ctk_button:
-                getattr(self, ctk_button['button_name']).configure(fg_color=ctk_button['fg_color'])
+                getattr(self, ctk_button['button_name']).configure(
+                    fg_color=ctk_button['fg_color'])
 
             if 'bind' in ctk_button:
                 getattr(self, ctk_button['button_name']).bind(ctk_button['bind'][0],
@@ -298,28 +346,12 @@ class Interface:
                 getattr(self, ctk_button['button_name']).grid(row=ctk_button['row'],
                                                               column=ctk_button['column'],
                                                               columnspan=ctk_button['columnspan'],
-                                                              **ctk_button['padding'])
+                                                              **ctk_button['self.padding'])
             else:
                 getattr(self, ctk_button['button_name']).grid(row=ctk_button['row'],
                                                               column=ctk_button['column'],
                                                               columnspan=ctk_button['columnspan'],
                                                               pady=ctk_button['pady'])
-
-        self.serial_menu = ctk.CTkOptionMenu(
-                          self.master,
-                          values=["COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7"],
-                          command=self.serial_port_callback).grid(row=0, column=4, **padding
-        )
-
-        self.manual_weight_var = ctk.StringVar(value="off")
-
-        self.manual_weight_checkbox = ctk.CTkCheckBox(self.master,
-                                                text="Inserir Peso Manualmente",
-                                                onvalue="on",
-                                                offvalue="off",
-                                                variable=self.manual_weight_var,
-                                                command=self.manual_weight_callback
-                                                ).grid(row=8, column=3)
 
     def author_callback(self):
         """
@@ -333,7 +365,8 @@ class Interface:
         """
         self.serial_com.set_port(choice)
         response = self.serial_com.connect()
-        ctkmsg(self.master, title="Comunicação Serial", message=response, option_1="OK")
+        ctkmsg(self.master, title="Comunicação Serial",
+               message=response, option_1="OK")
 
     def manual_weight_callback(self) -> None:
         """
@@ -341,7 +374,7 @@ class Interface:
         """
         print("Manual weight chekbox value: ", self.manual_weight_var.get())
 
-    def search_id(self, event=None) -> None:
+    def search_id(self, event=None) -> None: #pylint: disable=unused-argument
         """
         Callback for the search button.
         """
@@ -380,9 +413,10 @@ class Interface:
                 str_weight: str = str_weight.replace(".", ",")
                 self.weight_var.set(str_weight)
                 self.weight_input.insert(0, self.weight_var.get())
-        except Exception as e:
-            ctkmsg(title="Erro", message=e ,option_1="OK", icon='cancel')
-    def clear_inputs(self, event=None) -> None:
+        except ValueError as e:
+            ctkmsg(title="Erro", message=e, option_1="OK", icon='cancel')
+
+    def clear_inputs(self, event=None) -> None: #pylint: disable=unused-argument
         """
         Callback for the clear inputs button.
         """
@@ -439,11 +473,11 @@ class Interface:
                         label.label_info.boxes = i+1
                         label.create_mwm_label()
                         time.sleep(0.5)
-                        label.print_label()
+                        label.print_label(105, 75)
                     else:
                         label.create_label()
                         time.sleep(0.5)
-                        label.print_label()
+                        label.print_label(150, 100)
 
             except RuntimeError as e:
                 ctkmsg(self.master,

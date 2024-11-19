@@ -5,15 +5,14 @@
 # Tamanho da etiqueta: ETIQUETA ADESIVA BOPP PEROLADO 100 x 150mm - COUCHE PERSONALIZADA 250 UNID.
 import os
 from io import BytesIO
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageWin
 from barcode.codex import Code128, Code39
 from barcode.writer import ImageWriter
 from win32 import win32print
+import win32ui
 from get_data import LabelInfo
 
 LABEL_PATH: str = "./tmp/labels/"
-CMD_PRINT_LABEL = 'print /D:"\\\\{}" "{}"'
-
 
 class LabelPrint():
     """
@@ -129,9 +128,9 @@ class LabelPrint():
         Create label.
         """
 
-        WIDTH: int = self.mm_to_px(150) # pylint: disable=C0103
-        HEIGHT: int = self.mm_to_px(100) # pylint: disable=C0103
-        FONT_PATH: str = "./assets/fonts/FiraCode-Regular.ttf" # pylint: disable=C0103
+        WIDTH: int = self.mm_to_px(150)  # pylint: disable=C0103
+        HEIGHT: int = self.mm_to_px(100)  # pylint: disable=C0103
+        FONT_PATH: str = "./assets/fonts/FiraCode-Regular.ttf"  # pylint: disable=C0103
 
         # Posições dos elementos da etiqueta (label)
         attr: list[dict] = [
@@ -199,15 +198,15 @@ class LabelPrint():
         self.draw_label_elements(op_label, draw, attr, FONT_PATH)
 
         op_label.thumbnail((WIDTH, HEIGHT))
-        op_label.save('./tmp/labels/etq.png')
+        op_label.save(f'{LABEL_PATH}etq.png')
 
     def create_mwm_label(self) -> None:
         """
         Create MWM label.
         """
-        WIDTH: int = self.mm_to_px(105, 300) # pylint: disable=C0103
-        HEIGHT: int = self.mm_to_px(75, 300) # pylint: disable=C0103
-        FONT_PATH: str = "./assets/fonts/" # pylint: disable=C0103
+        WIDTH: int = self.mm_to_px(105, 300)  # pylint: disable=C0103
+        HEIGHT: int = self.mm_to_px(75, 300)  # pylint: disable=C0103
+        FONT_PATH: str = "./assets/fonts/"  # pylint: disable=C0103
 
         layout_positions: dict[str, tuple] = {
             'rectangle': (self.mm_to_px(7.5), self.mm_to_px(5.5),
@@ -357,10 +356,11 @@ class LabelPrint():
 
         self.draw_mwm_label_elements(mwm_label, draw, attributes)
 
-        mwm_label .thumbnail((WIDTH, HEIGHT))
-        mwm_label .save('./tmp/labels/etq.png')
+        mwm_label.thumbnail((WIDTH, HEIGHT))
+        mwm_label.save(f'{LABEL_PATH}etq.png')
 
-    def print_label(self, file_path: str = './tmp/labels/etq.png') -> None:
+    def print_label(self,  largura_mm: float, altura_mm: float, dpi: int = 300,
+                    file_path: str = './tmp/labels/etq.png') -> None:
         """
         Print label.
         """
@@ -370,8 +370,29 @@ class LabelPrint():
         printer = win32print.OpenPrinter(default_printer)
 
         try:
-            os.system(cmd := CMD_PRINT_LABEL.format(printer, abs_file_path))
-            print("PRINT_LABEL", f"Print label on {printer} with {cmd}")
+            # Redimensionando a imagem da etiqueta
+            label_print = Image.open(abs_file_path)
+            largura_px = int((largura_mm / 25.4) * dpi)
+            altura_px = int((altura_mm / 25.4) * dpi)
+            label_resized = label_print.resize(
+                (largura_px, altura_px))
+
+            if not largura_mm == 105 and not altura_mm == 75:
+                label_resized = label_resized.rotate(90, expand=True)
+                label_resized.show()
+
+            # Configuração da impressão
+            printer_dc = win32ui.CreateDC()
+            printer_dc.CreatePrinterDC(printer)
+            printer_dc.StartDoc("Impressão de Etiqueta")
+            printer_dc.StartPage()
+
+            label_dib = ImageWin.Dib(label_resized)
+            x0, y0, x1, y1 = 0, 0, largura_px, altura_px
+            label_dib.draw(printer_dc.GetHandleOutput(), (x0, y0, x1, y1))
+            printer_dc.EndPage()
+            printer_dc.EndDoc()
+            printer_dc.DeleteDC()
         except FileNotFoundError:
             print(f"Erro: Arquivo '{abs_file_path}' não encontrado.")
         except PermissionError:
@@ -379,10 +400,9 @@ class LabelPrint():
         finally:
             win32print.ClosePrinter(printer)
 
-
 if __name__ == '__main__':
     label_info = LabelInfo(223568, "CLIENTE", "CODIGO",
                            "DESCRICAO", 10, 3, 100)
     label = LabelPrint(label_info)
     label.create_label()
-    label.print_label()
+    label.print_label(150, 100)

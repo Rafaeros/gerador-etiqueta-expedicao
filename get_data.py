@@ -6,18 +6,18 @@ import pandas as pd
 
 file_date = dt.now().strftime("%d_%m_%Y")
 
-
 # Class LabelInfo
 class LabelInfo:
     """ LabelInfo class that contains information about the label. """
+
     def __init__(self,
-                op: str,
-                client: str,
-                code: str,
-                description: str,
-                quantity: int,
-                boxes: int,
-                weight: int) -> None:
+                 op: str,
+                 client: str,
+                 code: str,
+                 description: str,
+                 quantity: int,
+                 boxes: int,
+                 weight: int) -> None:
         """ Initialize the LabelInfo class. """
         today: str = dt.now()
         self.date: str = today.strftime("%d/%m/%Y")
@@ -46,8 +46,10 @@ class LabelInfo:
         self.barcode = self.code + " " + f"({self.client_code})"
         return self.barcode
 
+
 class LabelData:
     """LabelData class that contains information about the production orders to generate label."""
+
     def __init__(self, file_path: str = f"./ordens_{file_date}.xlsx") -> None:
         """ Initialize the LabelData class. """
         self.file_path: str = file_path
@@ -62,18 +64,19 @@ class LabelData:
             print(f"Erro: O arquivo '{file_path}' não foi encontrado.")
             return None
         except ValueError:
-            print(f"O arquivo '{file_path}' não possui um formato compatível ou está corrompido.")
+            print(f"O arquivo '{
+                  file_path}' não possui um formato compatível ou está corrompido.")
             return None
 
     def format_data(self) -> None:
         """Format the data. to remove unnecessary columns."""
         self.label_data = self.label_data[
             [
-              'Código',
-              'Cliente',
-              'Cód. Material',
-              'Material',
-              'Quantidade'
+                'Código',
+                'Cliente',
+                'Cód. Material',
+                'Material',
+                'Quantidade'
             ]
         ]
 
@@ -85,15 +88,19 @@ class LabelData:
         """ Get the data for the label. by production order code"""
         try:
             current_data = self.label_data.loc[
-                    self.label_data['Código']==op,
-                    ['Cliente', 'Cód. Material', 'Material', 'Quantidade']
-                ]
+                self.label_data['Código'] == op,
+                ['Cliente', 'Cód. Material', 'Material', 'Quantidade']
+            ]
             current_label = LabelInfo(
                 op,
-                current_data.loc[:,['Cliente']].to_string(index=False, header=False),
-                current_data.loc[:,['Cód. Material']].to_string(index=False, header=False),
-                current_data.loc[:,['Material']].to_string(index=False, header=False),
-                current_data.loc[:,['Quantidade']].to_string(index=False, header=False),
+                current_data.loc[:, ['Cliente']].to_string(
+                    index=False, header=False),
+                current_data.loc[:, ['Cód. Material']].to_string(
+                    index=False, header=False),
+                current_data.loc[:, ['Material']].to_string(
+                    index=False, header=False),
+                current_data.loc[:, ['Quantidade']].to_string(
+                    index=False, header=False),
                 boxes,
                 kg
             )
