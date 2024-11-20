@@ -379,7 +379,6 @@ class LabelPrint():
 
             if not largura_mm == 105 and not altura_mm == 75:
                 label_resized = label_resized.rotate(90, expand=True)
-                label_resized.show()
 
             # Configuração da impressão
             printer_dc = win32ui.CreateDC()
