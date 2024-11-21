@@ -10,6 +10,7 @@ from barcode.codex import Code128, Code39
 from barcode.writer import ImageWriter
 from win32 import win32print
 import win32ui
+import win32con
 from get_data import LabelInfo
 
 LABEL_PATH: str = "./tmp/labels/"
@@ -380,23 +381,33 @@ class LabelPrint():
             if not largura_mm == 105 and not altura_mm == 75:
                 label_resized = label_resized.rotate(90, expand=True)
 
+
+            label_width, label_height = label_resized.size
             # Configuração da impressão
             printer_dc = win32ui.CreateDC()
             printer_dc.CreatePrinterDC(default_printer)
+
+            horzres = printer_dc.GetDeviceCaps(win32con.HORZRES)
+            vertres = printer_dc.GetDeviceCaps(win32con.VERTRES)
+            printer_dc.SetMapMode(win32con.MM_ISOTROPIC)
+            printer_dc.SetViewportExt((horzres, vertres))
+            printer_dc.SetWindowExt((altura_px, largura_px))
+
             printer_dc.StartDoc("Impressão de Etiqueta")
             printer_dc.StartPage()
 
             label_dib = ImageWin.Dib(label_resized)
-            x0, y0, x1, y1 = 0, 0, largura_px, altura_px
+            x0, y0, x1, y1 = 0, 0, label_width, label_height
             label_dib.draw(printer_dc.GetHandleOutput(), (x0, y0, x1, y1))
-            printer_dc.EndPage()
-            printer_dc.EndDoc()
-            printer_dc.DeleteDC()
+
         except FileNotFoundError:
             print(f"Erro: Arquivo '{abs_file_path}' não encontrado.")
         except PermissionError:
             print(f"Erro: Permissão negada para acessar '{abs_file_path}'.")
         finally:
+            printer_dc.EndPage()
+            printer_dc.EndDoc()
+            printer_dc.DeleteDC()
             win32print.ClosePrinter(printer)
 
 if __name__ == '__main__':
