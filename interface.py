@@ -98,8 +98,6 @@ class Interface:
             values=["COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7"],
             command=self.serial_port_callback).grid(row=0, column=4, **self.padding
                                                     )
-        self.manual_weight_var = ctk.StringVar(value="off")
-
         self.manual_weight_checkbox = ctk.CTkCheckBox(self.master,
                                                       text="Inserir Peso Manualmente",
                                                       onvalue="on",
@@ -408,11 +406,15 @@ class Interface:
 
             if self.manual_weight_var.get() == "off":
                 time.sleep(0.1)
-                weight = self.serial_com.get_weight()
-                str_weight: str = f"{weight:.2f}"
-                str_weight: str = str_weight.replace(".", ",")
-                self.weight_var.set(str_weight)
-                self.weight_input.insert(0, self.weight_var.get())
+                try:
+                    weight = self.serial_com.get_weight()
+                    str_weight: str = f"{weight or 0:.2f}"
+                    str_weight: str = str_weight.replace(".", ",")
+                    self.weight_var.set(str_weight)
+                    self.weight_input.insert(0, self.weight_var.get())
+                except ValueError as e:
+                    ctkmsg(title="Erro", message=f"Balança Não conectada: {e}", option_1="OK", icon='cancel')
+
         except ValueError as e:
             ctkmsg(title="Erro", message=e, option_1="OK", icon='cancel')
 

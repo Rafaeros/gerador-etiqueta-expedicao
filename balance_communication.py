@@ -67,8 +67,11 @@ class Serial(serial.Serial):
 
             self.serial.reset_input_buffer()
 
-    def get_weight(self) -> float:
+    def get_weight(self) -> float | None:
         """ Get the weight. """
+        if self.weight is None:
+            return None
+        
         return self.weight
 
     def stop(self) -> None:

@@ -382,7 +382,7 @@ class LabelPrint():
 
             # Configuração da impressão
             printer_dc = win32ui.CreateDC()
-            printer_dc.CreatePrinterDC(printer)
+            printer_dc.CreatePrinterDC(default_printer)
             printer_dc.StartDoc("Impressão de Etiqueta")
             printer_dc.StartPage()
 
