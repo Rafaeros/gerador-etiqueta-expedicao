@@ -5,15 +5,14 @@
 # Tamanho da etiqueta: ETIQUETA ADESIVA BOPP PEROLADO 100 x 150mm - COUCHE PERSONALIZADA 250 UNID.
 import os
 from io import BytesIO
-from PIL import Image, ImageDraw, ImageFont, ImageWin
+from PIL import Image, ImageDraw, ImageFont
 from barcode.codex import Code128, Code39
 from barcode.writer import ImageWriter
 from win32 import win32print
-import win32ui
-import win32con
 from get_data import LabelInfo
 
 LABEL_PATH: str = "./tmp/labels/"
+
 
 class LabelPrint():
     """
@@ -360,7 +359,7 @@ class LabelPrint():
         mwm_label.thumbnail((WIDTH, HEIGHT))
         mwm_label.save(f'{LABEL_PATH}etq.png')
 
-    def print_label(self,  largura_mm: float, altura_mm: float, dpi: int = 300,
+    def print_label(self,  largura_mm: float, altura_mm: float,
                     file_path: str = './tmp/labels/etq.png') -> None:
         """
         Print label.
@@ -371,44 +370,26 @@ class LabelPrint():
         printer = win32print.OpenPrinter(default_printer)
 
         try:
-            # Redimensionando a imagem da etiqueta
-            label_print = Image.open(abs_file_path)
-            largura_px = int((largura_mm / 25.4) * dpi)
-            altura_px = int((altura_mm / 25.4) * dpi)
-            label_resized = label_print.resize(
-                (largura_px, altura_px))
+            win32print.StartDocPrinter(printer, 1, ("Label etq.png", None, "RAW"))
+            win32print.StartPagePrinter(printer)
 
-            if not largura_mm == 105 and not altura_mm == 75:
-                label_resized = label_resized.rotate(90, expand=True)
+            with open(abs_file_path, "rb") as f:
+                content = f.read()
+                image = Image.open(BytesIO(content))
+                if not largura_mm == 105 and not altura_mm == 75:
+                    content = image.rotate(90, expand=True).tobytes()
+                content = image.tobytes()
 
-
-            label_width, label_height = label_resized.size
-            # Configuração da impressão
-            printer_dc = win32ui.CreateDC()
-            printer_dc.CreatePrinterDC(default_printer)
-
-            horzres = printer_dc.GetDeviceCaps(win32con.HORZRES)
-            vertres = printer_dc.GetDeviceCaps(win32con.VERTRES)
-            printer_dc.SetMapMode(win32con.MM_ISOTROPIC)
-            printer_dc.SetViewportExt((horzres, vertres))
-            printer_dc.SetWindowExt((altura_px, largura_px))
-
-            printer_dc.StartDoc("Impressão de Etiqueta")
-            printer_dc.StartPage()
-
-            label_dib = ImageWin.Dib(label_resized)
-            x0, y0, x1, y1 = 0, 0, label_width, label_height
-            label_dib.draw(printer_dc.GetHandleOutput(), (x0, y0, x1, y1))
-
+            win32print.WritePrinter(printer, content)
+            win32print.EndPagePrinter(printer)
+            win32print.EndDocPrinter(printer)
         except FileNotFoundError:
             print(f"Erro: Arquivo '{abs_file_path}' não encontrado.")
         except PermissionError:
             print(f"Erro: Permissão negada para acessar '{abs_file_path}'.")
         finally:
-            printer_dc.EndPage()
-            printer_dc.EndDoc()
-            printer_dc.DeleteDC()
             win32print.ClosePrinter(printer)
+
 
 if __name__ == '__main__':
     label_info = LabelInfo(223568, "CLIENTE", "CODIGO",
