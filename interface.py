@@ -1,202 +1,144 @@
-import customtkinter as ctk
-from CTkMessagebox import CTkMessagebox as ctkmsg
-from get_data import LabelData, LabelInfo
-from label_print import LabelPrint
-from balance_communication import Serial
-import time
+import sys
+from PySide6.QtWidgets import (
+    QApplication,
+    QMainWindow,
+    QCheckBox,
+    QWidget,
+    QLabel,
+    QLineEdit,
+    QComboBox,
+    QFormLayout,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QGridLayout,
+    QSizePolicy
+)
+from PySide6.QtGui import QPalette, QColor
+from PySide6.QtCore import Signal
 
-class Interface:
-  def __init__(self) -> None:
-    self.master = ctk.CTk()
-    self.master.geometry("800x600")
-    self.master.resizable(False, False)
-    self.master.title("Gerador De Etiquetas")
-    self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
-    self.create_variables()
-    self.create_window()
+class LabelGenerator(QWidget):
+    op_label: QLabel
+    op_input: QLineEdit
+    code_label: QLabel
+    code_input: QLineEdit
+    client_label: QLabel
+    client_input: QLineEdit
+    description_label: QLabel
+    description_input: QLineEdit
+    barcode_label: QLabel
+    barcode_input: QLineEdit
+    quantity_label: QLabel
+    quantity_input: QLineEdit
+    box_count_label: QLabel
+    box_count_input: QLineEdit
+    weight_label: QLabel
+    weight_input: QLineEdit
+    port_select: QComboBox
+    search_button: QPushButton
+    clear_inputs_button: QPushButton
+    print_button: QPushButton
+    weight_checkbox: QCheckBox
 
-  def run(self) -> None:
-    self.master.mainloop()
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Gerador de Etiquetas")
+        self.setFixedSize(1200, 600)
+        self.setStyleSheet("""
+            QWidget { font-size: 16px;}
+            QVBoxLayout { background-color: #F0F0F0; margin: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+            QHBoxLayout { background-color: #F0F0F0; margin: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+            QFormLayout { background-color: #F0F0F0; margin: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+            QLabel { color: #333; margin-bottom: 5px; font-weight: bold; color: #fff}
+            QLineEdit { margin-bottom: 10px; color: #fff}
+            QPushButton { background-color: #0000FF}
+        """)
+        self.create_layout()
 
-  def on_closing(self) -> None:
-    if self.serial_com.is_open():
-      self.serial_com.stop()
-    self.master.destroy()
+    def on_checkbox_changed(self):
+        print("Checkbox state: ", self.weight_checkbox.isChecked())
 
-  def create_variables(self) -> None:
-    try:
-      self.label_data = LabelData()
-      self.label_data_df = self.label_data.label_data
-    except Exception as e:
-      msg = ctkmsg(self.master, title=f"Erro ao carregar planilha", message=f"Não encontrado o arquivo: ordens.xlsx com a data de hoje ({e})", icon="warning", option_1="OK")
-      msg.wait_window()
-      if msg.get() == "OK":
-        self.master.destroy()
-    
-    self.serial_com = Serial()
-    self.client_var = ctk.StringVar()
-    self.code_var = ctk.StringVar()
-    self.description_var = ctk.StringVar()
-    self.barcode_var = ctk.StringVar()
-    self.quantity_var  = ctk.IntVar()
-    self.weight_var = ctk.StringVar()
-    self.box_var = ctk.IntVar()
-    self.manual_weight_var = ctk.StringVar(value="on")
-    self.lot_quantity = ''
-    self.id= ''
+    def create_layout(self):
+        # Layouts
+        self.v_layout = QVBoxLayout()
+        self.form_layout = QFormLayout()
+        self.grid_layout = QGridLayout()
+        self.h_layout = QHBoxLayout()
 
-  def create_window(self) -> None:
-    self.id_label = ctk.CTkLabel(self.master, text="Número da OP:")
-    self.id_input = ctk.CTkEntry(self.master, placeholder_text="Digite o número da OP")
-    self.id_input.bind('<Return>', self.search_id)
+        # Checkbox
+        self.weight_checkbox = QCheckBox("Inserir peso manualmente?")
+        self.weight_checkbox.stateChanged.connect(self.on_checkbox_changed)
+        
+        # Dropdown menu
+        self.port_select = QComboBox()
 
-    self.search_button = ctk.CTkButton(self.master, text="Buscar", command=self.search_id, height=35, corner_radius=10)
-    self.clear_inputs_button = ctk.CTkButton(self.master, text="Limpar", command=self.clear_inputs, fg_color='red', height=35, corner_radius=10)
-    self.clear_inputs_button.bind('<Delete>', self.clear_inputs)
+        # Labels and inputs
+        labels: list[dict] = [
+            {"label": "op_label", "text": "Número da OP:", "row": 0, "col": 0},
+            {"label": "code_label", "text": "Código do produto:", "row": 1, "col": 0},
+            {"label": "client_label", "text": "Nome do cliente:"},
+            {"label": "description_label", "text": "Descrição do produto:"},
+            {"label": "barcode_label", "text": "Código de barras:"},
+            {"label": "quantity_label", "text": "Quantidade total:"},
+            {"label": "box_count_label", "text": "Quantidade de caixas:"},
+            {"label": "weight_label", "text": "Peso do produto:"}
+        ]
+        inputs: list[dict] = [
+            {"input": "op_input", "placeholder": "Número da OP", "row": 0, "col": 1, "width": 500},
+            {"input": "code_input", "placeholder": "Código do produto", "row": 1, "col": 1, "width": 500},
+            {"input": "client_input", "placeholder": "Nome do cliente", "width": 500},
+            {"input": "description_input", "placeholder": "Descrição do produto", "width": 500},
+            {"input": "barcode_input", "placeholder": "Código de barras", "width": 500},
+            {"input": "quantity_input", "placeholder": "Quantidade total", "width": 500},
+            {"input": "box_count_input", "placeholder": "Quantidade de caixas", "width": 500},
+            {"input": "weight_input", "placeholder": "Peso do produto", "width": 500}
+        ]
 
-    self.serial_com_port_menu = ctk.CTkOptionMenu(self.master, values=["COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7"], command=self.serial_port_callback)
+        # Buttons
+        buttons: list[dict] = [
+            {"button": "search_button", "text": "Buscar", "row": 0, "col": 2},
+            {"button": "clear_inputs_button", "text": "Limpar", "row": 1, "col": 2},
+            {"button": "print_button", "text": "Imprimir"}
+        ]
 
-    self.client_label = ctk.CTkLabel(self.master, text="Cliente:")
-    self.client_input = ctk.CTkEntry(self.master, placeholder_text="Cliente do Produto", width=550, height=35)
+        for i, label in enumerate(labels):
+            setattr(self, label["label"], QLabel(label["text"]))
+            getattr(self, label["label"]).setFixedWidth(200)
 
-    self.code_label = ctk.CTkLabel(self.master, text="Código:")
-    self.code_input = ctk.CTkEntry(self.master, placeholder_text="Código do Produto", width=300, height=35)
+            setattr(self, inputs[i]["input"], QLineEdit()) 
+            getattr(self, inputs[i]["input"]).setPlaceholderText(inputs[i]["placeholder"])
+            getattr(self, inputs[i]["input"]).setFixedWidth(inputs[i]["width"])
 
-    self.description_label = ctk.CTkLabel(self.master, text="Descrição:")
-    self.description_input = ctk.CTkEntry(self.master, placeholder_text="Descrição do Produto", width=550, height=35)
+            if "row" and "col" not in label:
+                self.form_layout.addRow(getattr(self, label["label"]), getattr(self, inputs[i]["input"]))
 
-    self.barcode_label = ctk.CTkLabel(self.master, text="Código de barras:")
-    self.barcode_input = ctk.CTkEntry(self.master, placeholder_text="Código de barras do Produto", width=300, height=35)
+            if "row" and "col" in label:
+                self.grid_layout.addWidget(getattr(self, label["label"]), label["row"], label["col"])
+                self.grid_layout.addWidget(getattr(self, inputs[i]["input"]), inputs[i]["row"], inputs[i]["col"])
+            
+            if "row" and "col" in inputs[i]:
+                self.grid_layout.addWidget(getattr(self, label["label"].replace("label", "input")), inputs[i]["row"], inputs[i]["col"])
+            
+        for i, button in enumerate(buttons):
+            setattr(self, button["button"], QPushButton(button["text"]))
+            if "row" and "col" in button:
+                self.grid_layout.addWidget(getattr(self, button["button"]), button["row"], button["col"])
+        
+        for i in range(1, 10):
+            self.port_select.addItem(f"COM{i}")
 
-    self.quantity_label = ctk.CTkLabel(self.master, text="Quantidade Total:")
-    self.quantity_input = ctk.CTkEntry(self.master, placeholder_text="Quantidade Total", width=200, height=35)
+        
+        # Layouts
+        self.grid_layout.addWidget(self.port_select, 0, 3)
+        self.v_layout.addLayout(self.grid_layout)
+        self.v_layout.addLayout(self.form_layout)
+        self.h_layout.addWidget(self.print_button)
+        self.h_layout.addWidget(self.weight_checkbox)
+        self.v_layout.addLayout(self.h_layout)
+        self.setLayout(self.v_layout)
 
-    self.manual_weight_checkbox = ctk.CTkCheckBox(self.master, text="Inserir Peso Manualmente", onvalue="on", offvalue="off", variable=self.manual_weight_var, command=self.manual_weight_callback)
-
-    self.weight_label = ctk.CTkLabel(self.master, text="Peso: ")
-    self.weight_input = ctk.CTkEntry(self.master, placeholder_text="Peso: 0,00 Kg")
-
-    self.box_label = ctk.CTkLabel(self.master, text="Insira a quantidade de caixas:")
-    self.box_input = ctk.CTkEntry(self.master, placeholder_text="N° de caixas:")
-
-    self.print_button = ctk.CTkButton(self.master, text="Imprimir", command=self.print_label, width=150, height=50, corner_radius=10)
-
-    padding = {'padx': 5, 'pady': 10}
-
-    self.id_label.grid(row=0,column=1, **padding)
-    self.id_input.grid(row=0, column=2, **padding)
-    self.search_button.grid(row=0, column=3, **padding)
-    self.clear_inputs_button.grid(row=1, column=3, **padding)
-
-    self.serial_com_port_menu.grid(row=0, column=4, **padding)
-
-    self.code_label.grid(row=1, column=1, **padding)
-    self.code_input.grid(row=1,column=2, **padding)
-
-    self.client_label.grid(row=2, column=1, **padding)
-    self.client_input.grid(row=3, column=1, columnspan=4, **padding)
-    
-    self.description_label.grid(row=4, column=1, **padding)
-    self.description_input.grid(row=5, column=1, columnspan=4, **padding)
-
-    self.barcode_label.grid(row=6, column=1, **padding)
-    self.barcode_input.grid(row=6, column=2, **padding)
-
-    self.box_label.grid(row=6, column=3)
-    self.box_input.grid(row=6, column=4)
-
-    self.quantity_label.grid(row=7, column=1, **padding)
-    self.quantity_input.grid(row=7, column=2, **padding)
-
-    self.weight_label.grid(row=7, column=3)
-    self.manual_weight_checkbox.grid(row=8, column=3)
-    self.weight_input.grid(row=7, column=4)
-
-    self.print_button.grid(row=10, column=2, columnspan=3, pady=20)
-
-  def serial_port_callback(self, choice: str) -> None:
-    self.serial_com.set_port(choice)
-    response = self.serial_com.connect()
-    ctkmsg(self.master, title="Comunicação Serial", message=response, option_1="OK")
-
-  def manual_weight_callback(self) -> None:
-    print("Manual weight chekbox value: ", self.manual_weight_var.get())
-
-  def search_id(self, event=None) -> None:
-    self.id = f"OP-{self.id_input.get().zfill(7)}"
-    
-    if not (self.label_data_df['Código'] == self.id).any():
-      ctkmsg(title="Não encontrado", message=f"Valor: {self.id} não foi encontrado", option_1="OK", icon="warning")
-      return
-      
-    try:
-      info = self.label_data.get_data(self.id, 1, "")
-      self.client_var.set(info.client)
-      self.code_var.set(info.code)
-      self.description_var.set(info.description)
-      self.barcode_var.set(info.barcode)
-      self.quantity_var.set(info.quantity)
-      self.box_var.set(1)
-
-      if self.client_input.get() != "":
-        ctkmsg(self.master, title="Aviso", message="Insira outra OP", option_1="OK", icon="warning")
-        return
-
-      self.client_input.insert(0, self.client_var.get())
-      self.code_input.insert(0, self.code_var.get())
-      self.description_input.insert(0, self.description_var.get())
-      self.barcode_input.insert(0, self.barcode_var.get())
-      self.quantity_input.insert(0, self.quantity_var.get())
-      self.box_input.insert(0, self.box_var.get())
-
-      if self.manual_weight_var.get() == "off":
-        time.sleep(0.1)
-        weight = self.serial_com.get_weight()
-        str_weight: str = f"{weight:.2f}"
-        str_weight: str = str_weight.replace(".", ",")
-        self.weight_var.set(str_weight)
-        self.weight_input.insert(0, self.weight_var.get())
-
-    except Exception as e:
-      ctkmsg(title="Erro", message=e ,option_1="OK", icon='cancel')
-    
-  def clear_inputs(self, event=None) -> None:
-    self.id_input.delete(0, ctk.END)
-    self.client_input.delete(0, ctk.END)
-    self.code_input.delete(0, ctk.END)
-    self.description_input.delete(0, ctk.END)
-    self.barcode_input.delete(0, ctk.END)
-    self.quantity_input.delete(0, ctk.END)
-    self.weight_input.delete(0, ctk.END)
-    self.box_input.delete(0, ctk.END)
-
-  def print_label(self) -> None:
-    if self.code_input.get() == "":
-      ctkmsg(self.master, title="Aviso", message="Insira alguma OP para imprimir", icon='warning', option_1="OK")
-      return
-    
-    quantity = int(self.quantity_input.get())
-    lot = int(self.box_input.get())
-
-    if quantity % lot == 0:
-      self.lot_quantity = int(quantity/lot)
-
-      if self.weight_input.get() == "":
-        ctkmsg(self.master, title="Aviso", message="Campo de peso está vazio, por favor preencha!", icon='warning', option_1="OK")
-        return
-      
-      try:
-        for _ in range(int(self.box_input.get())):
-          boxes = f"{_+1}/{self.box_input.get()}"
-          label = LabelPrint(LabelInfo(self.client_input.get(), self.code_input.get(), self.description_input.get(), self.lot_quantity, boxes, self.weight_input.get()))
-          label.create_label()
-          time.sleep(0.5)
-          label.print_label()
-
-      except Exception as e:
-        ctkmsg(self.master, message=f"Erro ao imprimir: {e}", title="Erro", icon="cancel", option_1="OK")
-      
-      finally:
-        self.clear_inputs()
-    else:
-      ctkmsg(self.master, title="Erro", message="Quantidade total não pode ser divisível pelo número de caixas", icon='warning', option_1="OK")
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = LabelGenerator()
+    window.show()
+    app.exec()
