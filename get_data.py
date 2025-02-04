@@ -1,58 +1,52 @@
-from datetime import datetime as dt
-import pandas as pd
-import re
+import json
+import asyncio
+from dataclasses import dataclass
+from requests_api_go import fkapi_get_op_data_by_codigo
 
-file_date = dt.now().strftime("%d_%m_%Y")
+@dataclass
+class OrdemProducao:
+    number: int
+    code: str
+    client: str
+    description: str
+    barcode: str
+    quantity: str
+    box_count: int
+    weight: float
 
-class LabelInfo:
-  def __init__(self, client: str, code: str, description: str, quantity: int, boxes: int, weight: int) -> None:
-    today: str = dt.now().strftime("%d/%m/%Y")
-    self.date: str = today
-    self.client: str = client
-    self.code: str = code
-    self.barcode: str = ""
-    self.description: str = description
-    self.quantity: int = quantity
-    self.weight: int = weight
-    self.boxes: int = boxes
-    self.set_barcode_data()
+    def __init__(self, number: int, code: str, client: str, description: str, barcode: str, quantity: str, box_count: int = "1", weight: float = ""):
+        self.number = number
+        self.code = code
+        self.client = client
+        self.description = description
+        self.barcode = barcode
+        self.quantity = quantity
+        self.box_count = box_count
+        self.weight = weight
 
-  def get_client_code(self, string) -> str:
-    pattern = r'\((.*?)\)'
-    search = re.search(pattern, string)
-    if search:
-      return search.group(0)
-    return ''
-
-  def set_barcode_data(self) -> str:
-    clientcode = self.get_client_code(self.description)
-    self.barcode = self.code + " " + clientcode
-    return self.barcode
-
-class LabelData:
-  def __init__(self, file_path: str = f"./ordens_{file_date}.xlsx") -> None:
-    self.file_path: str = file_path
-    self.label_data: pd.DataFrame = self.load_data(self.file_path)
-    self.format_data()
-
-  def load_data(self, file_path: str) -> pd.DataFrame | None:
+async def get_data_by_codigo(codigo_ordem_producao: str) -> OrdemProducao | None:
     try:
-      return pd.read_excel(file_path)
+        op_data: dict = await fkapi_get_op_data_by_codigo(codigo_ordem_producao)
+        if op_data is None:
+            print(op_data)
+            return None
+        op_data = json.loads(op_data)
+        return OrdemProducao(
+            number=op_data["codigoOrdemProducao"],
+            code=op_data["codigoMaterial"],
+            client=op_data["cliente"],
+            description=op_data["descricaoMaterial"],
+            barcode=op_data["descricaoMaterial"],
+            quantity=op_data["quantidade"]
+        )
+
+    except json.decoder.JSONDecodeError:
+        return "Erro ao decodificar JSON"
     except Exception as e:
-      print(f"Error loading data: {e}")
-      return None
+        return f"Erro: {e}"
     
-  def format_data(self) -> None:
-    self.label_data = self.label_data[['Código', 'Cliente', 'Cód. Material', 'Material', 'Quantidade']]
 
-  def print_data(self) -> None:
-    print(self.label_data)
 
-  def get_data(self, op: str, boxes: int, kg: str) -> LabelInfo | None:
-    try:
-      current_data = self.label_data.loc[self.label_data['Código']==op, ['Cliente', 'Cód. Material', 'Material', 'Quantidade']]
-      current_label = LabelInfo(current_data.loc[:,['Cliente']].to_string(index=False, header=False), current_data.loc[:,['Cód. Material']].to_string(index=False, header=False), current_data.loc[:,['Material']].to_string(index=False, header=False), current_data.loc[:,['Quantidade']].to_string(index=False, header=False), boxes, kg)
-      return current_label
-    except Exception as e:
-      print(f"not found {e}")
-      return None
+if __name__ == "__main__":
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(get_data_by_codigo("223536"))

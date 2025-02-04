@@ -1,8 +1,10 @@
 import sys
+import asyncio
+import qasync
 from PySide6.QtWidgets import (
     QApplication,
-    QMainWindow,
     QCheckBox,
+    QMessageBox,
     QWidget,
     QLabel,
     QLineEdit,
@@ -12,10 +14,8 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QPushButton,
     QGridLayout,
-    QSizePolicy
 )
-from PySide6.QtGui import QPalette, QColor
-from PySide6.QtCore import Signal
+from get_data import get_data_by_codigo
 
 class LabelGenerator(QWidget):
     op_label: QLabel
@@ -44,19 +44,74 @@ class LabelGenerator(QWidget):
         super().__init__()
         self.setWindowTitle("Gerador de Etiquetas")
         self.setFixedSize(1200, 600)
-        self.setStyleSheet("""
-            QWidget { font-size: 16px;}
-            QVBoxLayout { background-color: #F0F0F0; margin: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
-            QHBoxLayout { background-color: #F0F0F0; margin: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
-            QFormLayout { background-color: #F0F0F0; margin: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
-            QLabel { color: #333; margin-bottom: 5px; font-weight: bold; color: #fff}
-            QLineEdit { margin-bottom: 10px; color: #fff}
-            QPushButton { background-color: #0000FF}
-        """)
         self.create_layout()
+        self.set_styles()
 
     def on_checkbox_changed(self):
         print("Checkbox state: ", self.weight_checkbox.isChecked())
+
+    def on_clear_inputs_button_clicked(self):
+        self.op_input.clear()
+        self.code_input.clear()
+        self.client_input.clear()
+        self.description_input.clear()
+        self.barcode_input.clear()
+        self.quantity_input.clear()
+        self.box_count_input.clear()
+        self.weight_input.clear()
+
+    @qasync.asyncSlot()
+    async def on_search_button_clicked(self):
+        if(self.op_input.text() == ""):
+            QMessageBox.warning(self, "Erro", "Por favor, insira o número da OP")
+            return
+        
+        op = await get_data_by_codigo(self.op_input.text())
+        if op is None:
+            QMessageBox.warning(self, "Erro", "Erro ao buscar OP na API")
+            return
+        
+        self.code_input.setText(op.code)
+        self.client_input.setText(op.client)
+        self.description_input.setText(op.description)
+        self.barcode_input.setText(op.barcode)
+        self.quantity_input.setText(str(op.quantity))
+        self.box_count_input.setText(str(op.box_count))
+        self.weight_input.setText(str(op.weight))
+        
+        QMessageBox.information(self, "Sucesso", "OP encontrada com sucesso")
+    
+    @qasync.asyncSlot()
+    async def on_print_button_clicked(self):
+        pass
+
+    def set_styles(self):
+        # Global styles
+        self.setStyleSheet("""
+
+            QWidget {
+                background-color: #f0f0f0;
+                color: #000000
+            }
+
+            QPushButton {
+                background-color: #3674B5;
+                color: #fff;
+                border-radius: 5px;
+                padding: 5px 10px;
+                margin: 10px;
+                width: 100px;
+                height: 25px;
+            }
+
+            QPushButton:pressed {
+                background-color: #2D6187;
+                border: 1px solid #000000;
+            }
+
+        """)
+
+        self.clear_inputs_button.setStyleSheet("background-color: #B82132")
 
     def create_layout(self):
         # Layouts
@@ -64,6 +119,7 @@ class LabelGenerator(QWidget):
         self.form_layout = QFormLayout()
         self.grid_layout = QGridLayout()
         self.h_layout = QHBoxLayout()
+        self.grid_layout.setSpacing(10)
 
         # Checkbox
         self.weight_checkbox = QCheckBox("Inserir peso manualmente?")
@@ -86,14 +142,13 @@ class LabelGenerator(QWidget):
         inputs: list[dict] = [
             {"input": "op_input", "placeholder": "Número da OP", "row": 0, "col": 1, "width": 500},
             {"input": "code_input", "placeholder": "Código do produto", "row": 1, "col": 1, "width": 500},
-            {"input": "client_input", "placeholder": "Nome do cliente", "width": 500},
-            {"input": "description_input", "placeholder": "Descrição do produto", "width": 500},
-            {"input": "barcode_input", "placeholder": "Código de barras", "width": 500},
-            {"input": "quantity_input", "placeholder": "Quantidade total", "width": 500},
-            {"input": "box_count_input", "placeholder": "Quantidade de caixas", "width": 500},
-            {"input": "weight_input", "placeholder": "Peso do produto", "width": 500}
+            {"input": "client_input", "placeholder": "Nome do cliente", "width": 800},
+            {"input": "description_input", "placeholder": "Descrição do produto", "width": 800},
+            {"input": "barcode_input", "placeholder": "Código de barras", "width": 800},
+            {"input": "quantity_input", "placeholder": "Quantidade total", "width": 800},
+            {"input": "box_count_input", "placeholder": "Quantidade de caixas", "width": 800},
+            {"input": "weight_input", "placeholder": "Peso do produto", "width": 800}
         ]
-
         # Buttons
         buttons: list[dict] = [
             {"button": "search_button", "text": "Buscar", "row": 0, "col": 2},
@@ -124,21 +179,32 @@ class LabelGenerator(QWidget):
             if "row" and "col" in button:
                 self.grid_layout.addWidget(getattr(self, button["button"]), button["row"], button["col"])
         
+        # COM ports
         for i in range(1, 10):
             self.port_select.addItem(f"COM{i}")
 
-        
+        # Button actions
+        self.search_button.clicked.connect(self.on_search_button_clicked)
+        self.clear_inputs_button.clicked.connect(self.on_clear_inputs_button_clicked)  
+
         # Layouts
         self.grid_layout.addWidget(self.port_select, 0, 3)
         self.v_layout.addLayout(self.grid_layout)
         self.v_layout.addLayout(self.form_layout)
+        self.h_layout.addStretch()
         self.h_layout.addWidget(self.print_button)
         self.h_layout.addWidget(self.weight_checkbox)
+        self.h_layout.addStretch()
+        self.v_layout.addStretch()
         self.v_layout.addLayout(self.h_layout)
+        self.v_layout.addStretch()
         self.setLayout(self.v_layout)
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
+    app = QApplication([])
+    loop = qasync.QEventLoop(app)
+    asyncio.set_event_loop(loop)
     window = LabelGenerator()
     window.show()
-    app.exec()
+    with loop:
+        loop.run_forever()
