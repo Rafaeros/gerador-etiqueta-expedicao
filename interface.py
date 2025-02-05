@@ -70,16 +70,15 @@ class LabelGenerator(QWidget):
         if op is None:
             QMessageBox.warning(self, "Erro", "Erro ao buscar OP na API")
             return
-        
-        self.code_input.setText(op.code)
-        self.client_input.setText(op.client)
-        self.description_input.setText(op.description)
-        self.barcode_input.setText(op.barcode)
-        self.quantity_input.setText(str(op.quantity))
-        self.box_count_input.setText(str(op.box_count))
-        self.weight_input.setText(str(op.weight))
-        
-        QMessageBox.information(self, "Sucesso", "OP encontrada com sucesso")
+        else:            
+            self.code_input.setText(op.code)
+            self.client_input.setText(op.client)
+            self.description_input.setText(op.description)
+            self.barcode_input.setText(op.barcode)
+            self.quantity_input.setText(str(op.quantity))
+            self.box_count_input.setText(str(op.box_count))
+            self.weight_input.setText(str(op.weight))
+            QMessageBox.information(self, "Sucesso", "OP encontrada com sucesso")
     
     @qasync.asyncSlot()
     async def on_print_button_clicked(self):
