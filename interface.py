@@ -62,7 +62,7 @@ class LabelGenerator(QWidget):
 
     @qasync.asyncSlot()
     async def on_search_button_clicked(self):
-        if(self.op_input.text() == ""):
+        if not self.op_input.text():
             QMessageBox.warning(self, "Erro", "Por favor, insira o número da OP")
             return
         
@@ -70,15 +70,15 @@ class LabelGenerator(QWidget):
         if op is None:
             QMessageBox.warning(self, "Erro", "Erro ao buscar OP na API")
             return
-        else:            
-            self.code_input.setText(op.code)
-            self.client_input.setText(op.client)
-            self.description_input.setText(op.description)
-            self.barcode_input.setText(op.barcode)
-            self.quantity_input.setText(str(op.quantity))
-            self.box_count_input.setText(str(op.box_count))
-            self.weight_input.setText(str(op.weight))
-            QMessageBox.information(self, "Sucesso", "OP encontrada com sucesso")
+
+        self.code_input.setText(op.code)
+        self.client_input.setText(op.client)
+        self.description_input.setText(op.description)
+        self.barcode_input.setText(op.barcode)
+        self.quantity_input.setText(str(op.quantity))
+        self.box_count_input.setText(str(op.box_count))
+        self.weight_input.setText(str(op.weight))
+        QMessageBox.information(self, "Sucesso", "OP encontrada com sucesso")
     
     @qasync.asyncSlot()
     async def on_print_button_clicked(self):
@@ -155,25 +155,25 @@ class LabelGenerator(QWidget):
             {"button": "print_button", "text": "Imprimir"}
         ]
 
-        for i, label in enumerate(labels):
+        for label, input in zip(labels, inputs):
             setattr(self, label["label"], QLabel(label["text"]))
             getattr(self, label["label"]).setFixedWidth(200)
 
-            setattr(self, inputs[i]["input"], QLineEdit()) 
-            getattr(self, inputs[i]["input"]).setPlaceholderText(inputs[i]["placeholder"])
-            getattr(self, inputs[i]["input"]).setFixedWidth(inputs[i]["width"])
+            setattr(self, input["input"], QLineEdit()) 
+            getattr(self, input["input"]).setPlaceholderText(input["placeholder"])
+            getattr(self, input["input"]).setFixedWidth(input["width"])
 
             if "row" and "col" not in label:
-                self.form_layout.addRow(getattr(self, label["label"]), getattr(self, inputs[i]["input"]))
+                self.form_layout.addRow(getattr(self, label["label"]), getattr(self, input["input"]))
 
             if "row" and "col" in label:
                 self.grid_layout.addWidget(getattr(self, label["label"]), label["row"], label["col"])
-                self.grid_layout.addWidget(getattr(self, inputs[i]["input"]), inputs[i]["row"], inputs[i]["col"])
+                self.grid_layout.addWidget(getattr(self, input["input"]), input["row"], input["col"])
             
-            if "row" and "col" in inputs[i]:
-                self.grid_layout.addWidget(getattr(self, label["label"].replace("label", "input")), inputs[i]["row"], inputs[i]["col"])
+            if "row" and "col" in input:
+                self.grid_layout.addWidget(getattr(self, label["label"].replace("label", "input")), input["row"], input["col"])
             
-        for i, button in enumerate(buttons):
+        for button in buttons:
             setattr(self, button["button"], QPushButton(button["text"]))
             if "row" and "col" in button:
                 self.grid_layout.addWidget(getattr(self, button["button"]), button["row"], button["col"])
