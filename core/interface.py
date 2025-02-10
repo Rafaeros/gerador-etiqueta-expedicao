@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QGridLayout,
 )
-from get_data import get_op_data_by_codigo, get_all_op_data_on_carga_maquina
+from core.get_data import get_op_data_by_codigo, get_all_op_data_on_carga_maquina
 
 start_deliver_date = (dt.now()-timedelta(days=35)).strftime("%d-%m-%Y")
 end_deliver_date = (dt.now()+timedelta(days=35)).strftime("%d-%m-%Y")

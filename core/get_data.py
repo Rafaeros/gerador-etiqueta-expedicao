@@ -5,7 +5,7 @@ import aiohttp
 from datetime import timedelta, datetime as dt
 from bs4 import BeautifulSoup
 from dataclasses import dataclass, asdict
-from requests_api_go import fkapi_get_op_data_by_codigo
+from core.requests_api_go import fkapi_get_op_data_by_codigo
 
 TMP_PATH = "./tmp/"
 
