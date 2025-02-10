@@ -1,9 +1,13 @@
 import json
+import pathlib
 import asyncio
 import aiohttp
+from datetime import timedelta, datetime as dt
 from bs4 import BeautifulSoup
 from dataclasses import dataclass, asdict
 from requests_api_go import fkapi_get_op_data_by_codigo
+
+TMP_PATH = "./tmp/"
 
 @dataclass
 class OrdemDeProducao:
@@ -44,8 +48,9 @@ class OrdensDeProducao:
     def find_by_codigo(cls, code) -> dict[int, int]:
         return cls.instances.get(code, None)
 
-def format_carga_maquina_json_data_to_op(raw: str):
+def format_carga_maquina_json_data_to_op(raw: str, start_deliver_date: str, end_deliver_date: str) -> str | None:
     # Convertendo get do scraping para html
+    
         soup = BeautifulSoup(raw, 'html.parser')
 
         # Pegando todos table rows da tabela a partir do 1°
@@ -58,20 +63,27 @@ def format_carga_maquina_json_data_to_op(raw: str):
           client: str = tr.find_all("td")[3].get_text(separator='', strip=True)
           description: str = tr.find_all("td")[5].get_text(separator='', strip=True)
           quantity: int = int(tr.find_all("td")[6].get_text(separator='', strip=True))
-
           OrdensDeProducao.create(code, codigo_material, client, description, description, quantity)
 
         # Formatando as ordens de produção para formato JSON decofidicado para UTF-8
-        json_string: str = json.dumps(OrdensDeProducao.get_instances(), indent=2, ensure_ascii=False)
+        json_string = json.dumps(OrdensDeProducao.get_instances(), indent=4, ensure_ascii=False)
         json_string.encode("utf-8")
 
-        print(json_string)
+        if not pathlib.Path(TMP_PATH).exists():
+            pathlib.Path(TMP_PATH).mkdir()
+        
+        start_deliver_date = start_deliver_date.replace("/", "-")
+        end_deliver_date = end_deliver_date.replace("/", "-")
+        
+        with open(f"{TMP_PATH}ordens_{start_deliver_date}_{end_deliver_date}.json", "w") as file:
+            json.dump(OrdensDeProducao.get_instances(), file, indent=4, ensure_ascii=False)
+            return json_string
+        return None
 
 async def get_op_data_by_codigo(codigo_ordem_producao: str) -> OrdemDeProducao | None:
     try:
         op_data: dict = await fkapi_get_op_data_by_codigo(codigo_ordem_producao)
         if op_data is None:
-            print(op_data)
             return None
         op_data = json.loads(op_data)
         return OrdemDeProducao(
@@ -82,13 +94,12 @@ async def get_op_data_by_codigo(codigo_ordem_producao: str) -> OrdemDeProducao |
             barcode=op_data["descricaoMaterial"],
             quantity=op_data["quantidade"]
         )
-
     except json.decoder.JSONDecodeError:
-        return "Erro ao decodificar JSON"
+        return None
     except Exception as e:
-        return f"Erro: {e}"
+        return None
 
-async def get_all_op_data_on_carga_maquina():
+async def get_all_op_data_on_carga_maquina() -> dict | None:
     login_url: str = 'https://app.cargamaquina.com.br/site/login?c=31.1%7E78%2C8%5E56%2C8'
 
     login_payload: dict[str,str] = {
@@ -98,7 +109,8 @@ async def get_all_op_data_on_carga_maquina():
         "yt0": "Entrar"
       }
 
-
+    start_deliver_date: str = (dt.now()-timedelta(days=35)).strftime("%d/%m/%Y")
+    end_deliver_date: str = (dt.now()+timedelta(days=35)).strftime("%d/%m/%Y")
     url: str = 'https://app.cargamaquina.com.br/ordemProducao/exportarOrdens'
     params: dict[str,str] = {
         'OrdemProducao[codigo]': '',
@@ -109,25 +121,20 @@ async def get_all_op_data_on_carga_maquina():
         'OrdemProducao[forecast]': '0',
         'OrdemProducao[_inicioCriacao]': '',
         'OrdemProducao[_fimCriacao]': '',
-        'OrdemProducao[_inicioEntrega]': '01/01/2025',
-        'OrdemProducao[_fimEntrega]': '15/01/2025',
+        'OrdemProducao[_inicioEntrega]': f'{start_deliver_date}',
+        'OrdemProducao[_fimEntrega]': f'{end_deliver_date}',
         'OrdemProducao[_limparFiltro]': '0',
         'pageSize': '20',
     }
-    print("Trying to login with aiohttp")
     async with aiohttp.ClientSession() as session:
         async with session.post(login_url, data=login_payload) as response:
             if not response.ok:
-                print("Login failed")
-            if response.ok:
-                print("Login successful")
-                async with session.get(url, params=params) as response:
-                    if not response.ok:
-                        return {}
-                    if response.ok:
-                        data = await response.text()
-                        print("Get data sucessful, trying to convert to json")
-                        format_carga_maquina_json_data_to_op(data)
+                return None
+            async with session.get(url, params=params) as response:
+                if not response.ok:
+                    return None
+                data = await response.text()
+                return format_carga_maquina_json_data_to_op(data, start_deliver_date, end_deliver_date)
 
 def test_fkapi_get():
     loop = asyncio.get_event_loop()

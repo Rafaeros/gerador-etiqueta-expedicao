@@ -1,6 +1,9 @@
 import sys
+import json
+import pathlib
 import asyncio
 import qasync
+from datetime import timedelta, datetime as dt
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -15,30 +18,14 @@ from PySide6.QtWidgets import (
     QPushButton,
     QGridLayout,
 )
-from get_data import get_data_by_codigo
+from get_data import get_op_data_by_codigo, get_all_op_data_on_carga_maquina
+
+start_deliver_date = (dt.now()-timedelta(days=35)).strftime("%d-%m-%Y")
+end_deliver_date = (dt.now()+timedelta(days=35)).strftime("%d-%m-%Y")
+TMP_PATH = "./tmp/"
+ORDER_PATH = f"{TMP_PATH}ordens_{start_deliver_date}_{end_deliver_date}.json"
 
 class LabelGenerator(QWidget):
-    op_label: QLabel
-    op_input: QLineEdit
-    code_label: QLabel
-    code_input: QLineEdit
-    client_label: QLabel
-    client_input: QLineEdit
-    description_label: QLabel
-    description_input: QLineEdit
-    barcode_label: QLabel
-    barcode_input: QLineEdit
-    quantity_label: QLabel
-    quantity_input: QLineEdit
-    box_count_label: QLabel
-    box_count_input: QLineEdit
-    weight_label: QLabel
-    weight_input: QLineEdit
-    port_select: QComboBox
-    search_button: QPushButton
-    clear_inputs_button: QPushButton
-    print_button: QPushButton
-    weight_checkbox: QCheckBox
 
     def __init__(self):
         super().__init__()
@@ -66,19 +53,35 @@ class LabelGenerator(QWidget):
             QMessageBox.warning(self, "Erro", "Por favor, insira o número da OP")
             return
         
-        op = await get_data_by_codigo(self.op_input.text())
-        if op is None:
-            QMessageBox.warning(self, "Erro", "Erro ao buscar OP na API")
-            return
-        else:            
-            self.code_input.setText(op.code)
+        op = await get_op_data_by_codigo(self.op_input.text())
+        if op is not None:
+            self.code_input.setText(op.code_material)
             self.client_input.setText(op.client)
             self.description_input.setText(op.description)
             self.barcode_input.setText(op.barcode)
             self.quantity_input.setText(str(op.quantity))
             self.box_count_input.setText(str(op.box_count))
             self.weight_input.setText(str(op.weight))
-            QMessageBox.information(self, "Sucesso", "OP encontrada com sucesso")
+            return
+
+        if not pathlib.Path(ORDER_PATH).exists():
+            op = await get_all_op_data_on_carga_maquina()
+            if op is None:
+                QMessageBox.warning(self, "Erro", "Erro ao gerar arquivo dom as OPS")
+            
+        with open(ORDER_PATH, "r") as file:
+            op = json.load(file)
+            op_data = op.get(self.op_input.text(), None)
+            if op_data is not None:
+                self.code_input.setText(op_data["code_material"])
+                self.client_input.setText(op_data["client"])
+                self.description_input.setText(op_data["description"])
+                self.barcode_input.setText(op_data["barcode"])
+                self.quantity_input.setText(str(op_data["quantity"]))
+                self.box_count_input.setText(str(op_data["box_count"]))
+                self.weight_input.setText(str(op_data["weight"]))
+                return
+            QMessageBox.warning(self, "Erro", "OP não encontrada")
     
     @qasync.asyncSlot()
     async def on_print_button_clicked(self):
@@ -107,7 +110,6 @@ class LabelGenerator(QWidget):
                 background-color: #2D6187;
                 border: 1px solid #000000;
             }
-
         """)
 
         self.clear_inputs_button.setStyleSheet("background-color: #B82132")
@@ -139,8 +141,8 @@ class LabelGenerator(QWidget):
             {"label": "weight_label", "text": "Peso do produto:"}
         ]
         inputs: list[dict] = [
-            {"input": "op_input", "placeholder": "Número da OP", "row": 0, "col": 1, "width": 500},
-            {"input": "code_input", "placeholder": "Código do produto", "row": 1, "col": 1, "width": 500},
+            {"input": "op_input", "placeholder": "Número da OP", "row": 0, "col": 1, "width": 200},
+            {"input": "code_input", "placeholder": "Código do produto", "row": 1, "col": 1, "width": 300},
             {"input": "client_input", "placeholder": "Nome do cliente", "width": 800},
             {"input": "description_input", "placeholder": "Descrição do produto", "width": 800},
             {"input": "barcode_input", "placeholder": "Código de barras", "width": 800},
@@ -155,24 +157,25 @@ class LabelGenerator(QWidget):
             {"button": "print_button", "text": "Imprimir"}
         ]
 
-        for i, label in enumerate(labels):
+        for label, input in zip(labels, inputs):
             setattr(self, label["label"], QLabel(label["text"]))
             getattr(self, label["label"]).setFixedWidth(200)
 
-            setattr(self, inputs[i]["input"], QLineEdit()) 
-            getattr(self, inputs[i]["input"]).setPlaceholderText(inputs[i]["placeholder"])
-            getattr(self, inputs[i]["input"]).setFixedWidth(inputs[i]["width"])
+            setattr(self, input["input"], QLineEdit()) 
+            getattr(self, input["input"]).setPlaceholderText(input["placeholder"])
+            getattr(self, input["input"]).setFixedWidth(input["width"])
 
             if "row" and "col" not in label:
-                self.form_layout.addRow(getattr(self, label["label"]), getattr(self, inputs[i]["input"]))
+                self.form_layout.addRow(getattr(self, label["label"]), getattr(self, input["input"]))
 
             if "row" and "col" in label:
                 self.grid_layout.addWidget(getattr(self, label["label"]), label["row"], label["col"])
-                self.grid_layout.addWidget(getattr(self, inputs[i]["input"]), inputs[i]["row"], inputs[i]["col"])
+                self.grid_layout.addWidget(getattr(self, input["input"]), input["row"], input["col"])
             
-            if "row" and "col" in inputs[i]:
-                self.grid_layout.addWidget(getattr(self, label["label"].replace("label", "input")), inputs[i]["row"], inputs[i]["col"])
+            if "row" and "col" in input:
+                self.grid_layout.addWidget(getattr(self, label["label"].replace("label", "input")), input["row"], input["col"])
             
+
         for i, button in enumerate(buttons):
             setattr(self, button["button"], QPushButton(button["text"]))
             if "row" and "col" in button:
