@@ -4,6 +4,7 @@ import pathlib
 import asyncio
 import qasync
 from datetime import timedelta, datetime as dt
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -19,6 +20,7 @@ from PySide6.QtWidgets import (
     QGridLayout,
 )
 from core.get_data import get_op_data_by_codigo, get_all_op_data_on_carga_maquina
+from core.balance_communication import BalanceCommunication
 
 start_deliver_date = (dt.now()-timedelta(days=35)).strftime("%d-%m-%Y")
 end_deliver_date = (dt.now()+timedelta(days=35)).strftime("%d-%m-%Y")
@@ -26,6 +28,8 @@ TMP_PATH = "./tmp/"
 ORDER_PATH = f"{TMP_PATH}ordens_{start_deliver_date}_{end_deliver_date}.json"
 
 class LabelGenerator(QWidget):
+    balance: BalanceCommunication
+    is_closing: bool
 
     def __init__(self):
         super().__init__()
@@ -33,9 +37,27 @@ class LabelGenerator(QWidget):
         self.setFixedSize(1200, 600)
         self.create_layout()
         self.set_styles()
+        self.balance = BalanceCommunication()
+        self.is_closing = False
+    
+    def close_event(self, event):
+        if not self.is_closing:
+            event.ignore()
+            asyncio.create_task(self.handle_close())
 
-    def on_checkbox_changed(self):
-        print("Checkbox state: ", self.weight_checkbox.isChecked())
+    async def handle_close(self):
+        self.is_closing = True
+        
+        if self.balance.is_open:
+            self.balance.stop_serial()
+        self.balance.close()
+        
+        self.close()
+        QApplication.quit()
+
+    def on_port_changed(self):
+        self.balance.set_port(self.port_select.currentText())
+        self.balance.connect()
 
     def on_clear_inputs_button_clicked(self):
         self.op_input.clear()
@@ -80,9 +102,13 @@ class LabelGenerator(QWidget):
                 self.quantity_input.setText(str(op_data["quantity"]))
                 self.box_count_input.setText(str(op_data["box_count"]))
                 self.weight_input.setText(str(op_data["weight"]))
+                
+                if not self.weight_checkbox.isChecked():
+                    self.weight_input.setText(str(self.balance.weight/100))
+                
                 return
             QMessageBox.warning(self, "Erro", "OP não encontrada")
-    
+
     @qasync.asyncSlot()
     async def on_print_button_clicked(self):
         pass
@@ -124,7 +150,6 @@ class LabelGenerator(QWidget):
 
         # Checkbox
         self.weight_checkbox = QCheckBox("Inserir peso manualmente?")
-        self.weight_checkbox.stateChanged.connect(self.on_checkbox_changed)
         
         # Dropdown menu
         self.port_select = QComboBox()
@@ -184,6 +209,8 @@ class LabelGenerator(QWidget):
         # COM ports
         for i in range(1, 10):
             self.port_select.addItem(f"COM{i}")
+        self.port_select.setCurrentIndex(0)
+        self.port_select.currentIndexChanged.connect(self.on_port_changed)
 
         # Button actions
         self.search_button.clicked.connect(self.on_search_button_clicked)
@@ -202,11 +229,15 @@ class LabelGenerator(QWidget):
         self.v_layout.addStretch()
         self.setLayout(self.v_layout)
 
-if __name__ == "__main__":
-    app = QApplication([])
+async def app():
+    app = QApplication(sys.argv)
     loop = qasync.QEventLoop(app)
     asyncio.set_event_loop(loop)
     window = LabelGenerator()
     window.show()
-    with loop:
+    async with loop:
         loop.run_forever()
+
+if __name__ == "__main__":
+    asyncio.run(app())
+    

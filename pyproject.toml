@@ -9,6 +9,7 @@ dependencies = [
     "asyncio>=3.4.3",
     "beautifulsoup4>=4.13.3",
     "datetime>=5.5",
+    "pyserial>=3.5",
     "pyside6>=6.8.1.1",
     "qasync>=0.27.1",
 ]
