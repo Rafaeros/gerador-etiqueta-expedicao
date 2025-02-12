@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QGridLayout,
 )
-from core.get_data import get_op_data_by_codigo, get_all_op_data_on_carga_maquina
+from core.get_data import get_op_data_by_codigo, get_all_op_data_on_carga_maquina, OrdemDeProducao
 from core.balance_communication import BalanceCommunication
 
 start_deliver_date = (dt.now()-timedelta(days=35)).strftime("%d-%m-%Y")
@@ -74,23 +74,22 @@ class LabelGenerator(QWidget):
         if(self.op_input.text() == ""):
             QMessageBox.warning(self, "Erro", "Por favor, insira o número da OP")
             return
-        
-        op = await get_op_data_by_codigo(self.op_input.text())
-        if op is not None:
-            self.code_input.setText(op.code_material)
-            self.client_input.setText(op.client)
-            self.description_input.setText(op.description)
-            self.barcode_input.setText(op.barcode)
-            self.quantity_input.setText(str(op.quantity))
-            self.box_count_input.setText(str(op.box_count))
-            self.weight_input.setText(str(op.weight))
-            return
-
         if not pathlib.Path(ORDER_PATH).exists():
+            op = await get_op_data_by_codigo(self.op_input.text())
+            if op is not None:
+                self.code_input.setText(op.code_material)
+                self.client_input.setText(op.client)
+                self.description_input.setText(op.description)
+                self.barcode_input.setText(op.barcode)
+                self.quantity_input.setText(str(op.quantity))
+                self.box_count_input.setText(str(op.box_count))
+                self.weight_input.setText(str(op.weight))
+                return
+            QMessageBox.warning(self, "Erro", "OP não encontrada na API, puxando dados do Carga Máquina")
             op = await get_all_op_data_on_carga_maquina()
             if op is None:
                 QMessageBox.warning(self, "Erro", "Erro ao gerar arquivo dom as OPS")
-            
+                
         with open(ORDER_PATH, "r") as file:
             op = json.load(file)
             op_data = op.get(self.op_input.text(), None)
@@ -102,16 +101,33 @@ class LabelGenerator(QWidget):
                 self.quantity_input.setText(str(op_data["quantity"]))
                 self.box_count_input.setText(str(op_data["box_count"]))
                 self.weight_input.setText(str(op_data["weight"]))
-                
                 if not self.weight_checkbox.isChecked():
                     self.weight_input.setText(str(self.balance.weight/100))
-                
                 return
             QMessageBox.warning(self, "Erro", "OP não encontrada")
+            return
 
     @qasync.asyncSlot()
     async def on_print_button_clicked(self):
-        pass
+        if self.op_input.text() == "":
+            QMessageBox.warning(self, "Erro", "Por favor, insira o número da OP")
+            return
+        if self.weigh_input.text() == "":
+            QMessageBox.warning(self, "Erro", "Por favor, insira o peso do produto")
+            return
+        OrdemDeProducao.create(
+            code=int(self.op_input.text()),
+            code_material=self.code_input.text(),
+            client=self.client_input.text(),
+            description=self.description_input.text(),
+            barcode=self.barcode_input.text(),
+            quantity=self.quantity_input.text(),
+            box_count=self.box_count_input.text(),
+            weight=self.weight_input.text()
+        )
+        print(OrdemDeProducao.instances)
+        QMessageBox.information(self, "Sucesso", "Etiqueta impressa com sucesso")
+
 
     def set_styles(self):
         # Global styles
