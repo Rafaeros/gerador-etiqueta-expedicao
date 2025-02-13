@@ -41,9 +41,8 @@ class BalanceCommunication(serial.Serial):
             try:
                 line = sio.readline()
                 if line.startswith("D"):
-                    self.weight = int(line[:1])
+                    self.weight = int(line[1:].replace(".", ""))
                     sio.flush()
-                    return self.weight
                 sio.flush()
             except serial.SerialException:
                 return "Serial error"
