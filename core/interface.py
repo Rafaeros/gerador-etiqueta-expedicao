@@ -138,6 +138,21 @@ class LabelGenerator(QWidget):
                 color: #000000
             }
 
+            QLabel {
+                font-weight: bold;
+                font-size: 14px;
+            }
+
+            QLineEdit {
+                font-size: 12px;
+                border: 1px solid #000000;
+                border-radius: 5px;
+                padding: 5px;
+                margin: 10px;
+                width: 200px;
+                height: 25px;
+            }
+
             QPushButton {
                 background-color: #3674B5;
                 color: #fff;
@@ -183,19 +198,19 @@ class LabelGenerator(QWidget):
         ]
         inputs: list[dict] = [
             {"input": "op_input", "placeholder": "Número da OP", "row": 0, "col": 1, "width": 200},
-            {"input": "code_input", "placeholder": "Código do produto", "row": 1, "col": 1, "width": 300},
-            {"input": "client_input", "placeholder": "Nome do cliente", "width": 800},
-            {"input": "description_input", "placeholder": "Descrição do produto", "width": 800},
-            {"input": "barcode_input", "placeholder": "Código de barras", "width": 800},
-            {"input": "quantity_input", "placeholder": "Quantidade total", "width": 800},
-            {"input": "box_count_input", "placeholder": "Quantidade de caixas", "width": 800},
-            {"input": "weight_input", "placeholder": "Peso do produto", "width": 800}
+            {"input": "code_input", "placeholder": "Código do produto", "row": 1, "col": 1, "width": 200},
+            {"input": "client_input", "placeholder": "Nome do cliente", "width": 600},
+            {"input": "description_input", "placeholder": "Descrição do produto", "width": 600},
+            {"input": "barcode_input", "placeholder": "Código de barras", "width": 600},
+            {"input": "quantity_input", "placeholder": "Quantidade total", "width": 200},
+            {"input": "box_count_input", "placeholder": "Quantidade de caixas", "width": 200},
+            {"input": "weight_input", "placeholder": "Peso do produto", "width": 200}
         ]
         # Buttons
         buttons: list[dict] = [
             {"button": "search_button", "text": "Buscar", "row": 0, "col": 2},
             {"button": "clear_inputs_button", "text": "Limpar", "row": 1, "col": 2},
-            {"button": "print_button", "text": "Imprimir"}
+            {"button": "print_button", "text": "Imprimir",}
         ]
 
         for label, input in zip(labels, inputs):
@@ -226,6 +241,7 @@ class LabelGenerator(QWidget):
         for i in range(1, 10):
             self.port_select.addItem(f"COM{i}")
         self.port_select.setCurrentIndex(0)
+        self.port_select.setFixedHeight(30)
         self.port_select.currentIndexChanged.connect(self.on_port_changed)
 
         # Button actions
