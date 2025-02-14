@@ -5,14 +5,15 @@ import aiohttp
 from datetime import timedelta, datetime as dt
 from bs4 import BeautifulSoup
 from dataclasses import dataclass, asdict
-from core.requests_api_go import fkapi_get_op_data_by_codigo
+from requests_api_go import fkapi_get_op_data_by_codigo
 
 TMP_PATH = "./tmp/"
 
 @dataclass
 class OrdemDeProducao:
+    today: str
     code: int
-    code_material: str
+    material_code: str
     client: str
     description: str
     barcode: str
@@ -20,9 +21,10 @@ class OrdemDeProducao:
     box_count: int
     weight: float
 
-    def __init__(self, code: int, code_material: str, client: str, description: str, barcode: str, quantity: str, box_count: int = "1", weight: float = ""):
+    def __init__(self, code: int, material_co: str, client: str, description: str, barcode: str, quantity: str, box_count: int = "1", weight: float = ""):
+        self.today = dt.now().strftime("%d/%m/%Y")
         self.code = code
-        self.code_material = code_material
+        self.material_code = material_co
         self.client = client
         self.description = description
         self.barcode = barcode
@@ -35,9 +37,9 @@ class OrdensDeProducao:
     instances: dict[int, int] = {}
 
     @classmethod
-    def create(cls, code: int, code_material: str, client: str, description: str, barcode: str, quantity: int) -> None:
+    def create(cls, code: int, material_code: str, client: str, description: str, barcode: str, quantity: int) -> None:
         # Cria uma nova instância de OP
-        instance = OrdemDeProducao(code, code_material, client, description, barcode, code_material, quantity)
+        instance = OrdemDeProducao(code, material_code, client, description, barcode, material_code, quantity)
         cls.instances[instance.code] = asdict(instance)
 
     @classmethod
@@ -59,11 +61,11 @@ def format_carga_maquina_json_data_to_op(raw: str, start_deliver_date: str, end_
         # Iterando a pagina para coleta dos dados das Ordens de Produção e passando para uma classe
         for tr in trs:
           code: int = int(tr.find_all("td")[2].get_text(separator='', strip=True).split('-')[-1])
-          codigo_material: str = tr.find_all("td")[4].get_text(separator='', strip=True)
+          material_code: str = tr.find_all("td")[4].get_text(separator='', strip=True)
           client: str = tr.find_all("td")[3].get_text(separator='', strip=True)
           description: str = tr.find_all("td")[5].get_text(separator='', strip=True)
           quantity: int = int(tr.find_all("td")[6].get_text(separator='', strip=True))
-          OrdensDeProducao.create(code, codigo_material, client, description, description, quantity)
+          OrdensDeProducao.create(code, material_code, client, description, material_code, quantity)
 
         # Formatando as ordens de produção para formato JSON decofidicado para UTF-8
         json_string = json.dumps(OrdensDeProducao.get_instances(), indent=4, ensure_ascii=False)
@@ -88,7 +90,7 @@ async def get_op_data_by_codigo(codigo_ordem_producao: str) -> OrdemDeProducao |
         op_data = json.loads(op_data)
         return OrdemDeProducao(
             code=op_data["codigoOrdemProducao"],
-            code_material=op_data["codigoMaterial"],
+            material_code=op_data["codigoMaterial"],
             client=op_data["cliente"],
             description=op_data["descricaoMaterial"],
             barcode=op_data["descricaoMaterial"],

@@ -77,7 +77,7 @@ class LabelGenerator(QWidget):
         if not pathlib.Path(ORDER_PATH).exists():
             op = await get_op_data_by_codigo(self.op_input.text())
             if op is not None:
-                self.code_input.setText(op.code_material)
+                self.code_input.setText(op.material_code)
                 self.client_input.setText(op.client)
                 self.description_input.setText(op.description)
                 self.barcode_input.setText(op.barcode)
@@ -94,7 +94,7 @@ class LabelGenerator(QWidget):
             op = json.load(file)
             op_data = op.get(self.op_input.text(), None)
             if op_data is not None:
-                self.code_input.setText(op_data["code_material"])
+                self.code_input.setText(op_data["material_code"])
                 self.client_input.setText(op_data["client"])
                 self.description_input.setText(op_data["description"])
                 self.barcode_input.setText(op_data["barcode"])
@@ -117,7 +117,7 @@ class LabelGenerator(QWidget):
             return
         OrdemDeProducao.create(
             code=int(self.op_input.text()),
-            code_material=self.code_input.text(),
+            material_code=self.code_input.text(),
             client=self.client_input.text(),
             description=self.description_input.text(),
             barcode=self.barcode_input.text(),
