@@ -23,10 +23,11 @@ from core.get_data import get_op_data_by_codigo, get_all_op_data_on_carga_maquin
 from core.balance_communication import BalanceCommunication
 from core.generate_labels import Label
 
-start_deliver_date = (dt.now()-timedelta(days=35)).strftime("%d-%m-%Y")
-end_deliver_date = (dt.now()+timedelta(days=35)).strftime("%d-%m-%Y")
-TMP_PATH = "./tmp/"
-ORDER_PATH = f"{TMP_PATH}ordens_{start_deliver_date}_{end_deliver_date}.json"
+start_deliver_date: str = (dt.now()-timedelta(days=35)).strftime("%d-%m-%Y")
+end_deliver_date: str = (dt.now()+timedelta(days=35)).strftime("%d-%m-%Y")
+TMP_PATH: pathlib.Path = pathlib.Path().parent / "tmp/"
+TMP_PATH.mkdir(parents=True, exist_ok=True)
+ORDER_PATH: str = f"{TMP_PATH}/ordens_{start_deliver_date}_{end_deliver_date}.json"
 
 class LabelGenerator(QWidget):
     balance: BalanceCommunication
@@ -48,11 +49,9 @@ class LabelGenerator(QWidget):
 
     async def handle_close(self):
         self.is_closing = True
-        
         if self.balance.is_open:
             self.balance.stop_serial()
         self.balance.close()
-        
         self.close()
         QApplication.quit()
 
@@ -103,7 +102,8 @@ class LabelGenerator(QWidget):
                 self.box_count_input.setText(str(op_data["box_count"]))
                 self.weight_input.setText(str(op_data["weight"]))
                 if not self.weight_checkbox.isChecked():
-                    self.weight_input.setText(str(self.balance.weight/100))
+                    weight: str = str(self.balance.weight/100).replace(".", ",")
+                    self.weight_input.setText(weight)
                 return
             QMessageBox.warning(self, "Erro", "OP não encontrada")
             return
@@ -121,7 +121,7 @@ class LabelGenerator(QWidget):
         if not self.quantity_input.text().isnumeric():
             QMessageBox.warning(self, "Erro", "Por favor, insira a quantidade corretamente")
             return
-        
+
         op = OrdemDeProducao(
             code=int(self.op_input.text()),
             material_code=self.code_input.text(),
@@ -130,7 +130,7 @@ class LabelGenerator(QWidget):
             barcode=self.barcode_input.text(),
             quantity=int(self.quantity_input.text()),
             box_count=int(self.box_count_input.text()),
-            weight=self.weight_input.text()
+            weight= self.weight_input.text()
         )
 
         label = Label(op)

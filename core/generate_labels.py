@@ -18,7 +18,7 @@ LABEL_SIZE: int = (428, 283)
 MARGIN: int = 14
 FONTS_PATH: pathlib.Path = pathlib.Path(__file__).parent / "assets/fonts"
 LABEL_FONTS: list = [TTFont("FiraCodeRegular", FONTS_PATH / "FiraCode-Regular.ttf"), TTFont("FiraCodeBold", FONTS_PATH / "FiraCode-Bold.ttf")]
-LABELS_PATH: pathlib.Path = pathlib.Path(__file__).parent / "tmp/labels"
+LABELS_PATH: pathlib.Path = pathlib.Path().parent / "tmp/labels"
 LABELS_PATH.mkdir(parents=True, exist_ok=True)
 
 class Label(Canvas):
@@ -66,11 +66,11 @@ class Label(Canvas):
                 "line": {"x1": 0, "y1": 200, "x2": 428, "y2": 200},
                 "client": {"x": MARGIN, "y": 170, "text": f"CLIENTE: {self.op.client}", "font": "FiraCodeRegular", "font_size": 12},
                 "material_code": {"x": MARGIN, "y": 150, "text": f"CODIGO: {self.op.material_code}", "font": "FiraCodeBold", "font_size": 18},
-                "description": {"x": MARGIN, "y": 115, "text": f"DESCRICAO: {self.op.description}", "font": "FiraCodeRegular", "font_size": 12},
+                "description": {"x": MARGIN, "y": 125, "text": f"DESCRICAO: {self.op.description}", "font": "FiraCodeRegular", "font_size": 12},
                 "barcode": {"x": -5, "y": 65, "text": self.op.barcode, "font": "FiraCodeRegular", "font_size": 12},
-                "quantity": {"x": MARGIN, "y": 20, "text": f"QUANTIDADE: {lot_quantity:,.0f}", "font": "FiraCodeRegular", "font_size": 12},
-                "quantity_barcode" : {"x": 150, "y": 15, "text": f"{lot_quantity:,.0f}", "font": "FiraCodeRegular", "font_size": 12},
-                "weight": {"x": 330, "y": 20, "text": f"{self.op.weight} KG", "font": "FiraCodeRegular", "font_size": 12}
+                "quantity": {"x": MARGIN, "y": 20, "text": f"QUANTIDADE: {lot_quantity:.0f}", "font": "FiraCodeRegular", "font_size": 12},
+                "quantity_barcode" : {"x": 150, "y": 15, "text": f"{lot_quantity:.0f}", "font": "FiraCodeRegular", "font_size": 12},
+                "weight": {"x": 350, "y": 20, "text": f"{self.op.weight} KG", "font": "FiraCodeRegular", "font_size": 12}
             }
 
             for key, value in elements_positions.items():
@@ -86,9 +86,7 @@ class Label(Canvas):
                 self._draw_text(value["x"], value["y"], value["text"], value["font"], value["font_size"])
             self.showPage()
         self.save()
-
         self.print_label(str(LABELS_PATH / f"{self.op.code}.pdf"))
-
         return (True, "")
 
     def print_label(self, pdf_path: str) -> bool:
@@ -104,11 +102,10 @@ class Label(Canvas):
             return False
         finally:
             win32print.ClosePrinter(hprinter)
-
         return True
 
 
 if __name__ == "__main__":
-    op = OrdemDeProducao(223536, "CEA085 000 000", "CEABS SERVIÇOS ELETRONICOS LTDA", "MODULO ISCA 2GKF", "CEA085 000 000 (225664)", 2000, 2, 10.50)
+    op = OrdemDeProducao(223536, "CEA085 000 000", "CEABS SERVIÇOS ELETRONICOS LTDA", "MODULO ISCA 2GKF", "CEA085 000 000 (225664)", 2000, 1, 1050)
     lb = Label(op)
     lb.generate_label()
