@@ -18,7 +18,7 @@ class OrdemDeProducao:
     barcode: str
     quantity: str
     box_count: int
-    weight: int
+    weight: int | str
 
     def __init__(self, code: int, material_code: str, client: str, description: str, barcode: str, quantity: int, box_count: int = "1", weight: int = 0):
         self.code = code
