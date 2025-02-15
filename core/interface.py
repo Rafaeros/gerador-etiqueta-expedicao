@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
 )
 from core.get_data import get_op_data_by_codigo, get_all_op_data_on_carga_maquina, OrdemDeProducao
 from core.balance_communication import BalanceCommunication
+from core.generate_labels import Label
 
 start_deliver_date = (dt.now()-timedelta(days=35)).strftime("%d-%m-%Y")
 end_deliver_date = (dt.now()+timedelta(days=35)).strftime("%d-%m-%Y")
@@ -112,20 +113,32 @@ class LabelGenerator(QWidget):
         if self.op_input.text() == "":
             QMessageBox.warning(self, "Erro", "Por favor, insira o número da OP")
             return
-        if self.weigh_input.text() == "":
+
+        if self.weight_input.text() == "":
             QMessageBox.warning(self, "Erro", "Por favor, insira o peso do produto")
             return
-        OrdemDeProducao.create(
+
+        if not self.quantity_input.text().isnumeric():
+            QMessageBox.warning(self, "Erro", "Por favor, insira a quantidade corretamente")
+            return
+        
+        op = OrdemDeProducao(
             code=int(self.op_input.text()),
             material_code=self.code_input.text(),
             client=self.client_input.text(),
             description=self.description_input.text(),
             barcode=self.barcode_input.text(),
-            quantity=self.quantity_input.text(),
-            box_count=self.box_count_input.text(),
+            quantity=int(self.quantity_input.text()),
+            box_count=int(self.box_count_input.text()),
             weight=self.weight_input.text()
         )
-        print(OrdemDeProducao.instances)
+
+        label = Label(op)
+        err, err_msg = label.generate_label()
+        if err == False:
+            QMessageBox.warning(self, "Erro", err_msg)
+            return
+
         QMessageBox.information(self, "Sucesso", "Etiqueta impressa com sucesso")
 
 
@@ -247,6 +260,7 @@ class LabelGenerator(QWidget):
         # Button actions
         self.search_button.clicked.connect(self.on_search_button_clicked)
         self.clear_inputs_button.clicked.connect(self.on_clear_inputs_button_clicked)  
+        self.print_button.clicked.connect(self.on_print_button_clicked)
 
         # Layouts
         self.grid_layout.addWidget(self.port_select, 0, 3)

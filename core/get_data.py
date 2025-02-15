@@ -5,13 +5,12 @@ import aiohttp
 from datetime import timedelta, datetime as dt
 from bs4 import BeautifulSoup
 from dataclasses import dataclass, asdict
-from requests_api_go import fkapi_get_op_data_by_codigo
+from core.requests_api_go import fkapi_get_op_data_by_codigo
 
 TMP_PATH = "./tmp/"
 
 @dataclass
 class OrdemDeProducao:
-    today: str
     code: int
     material_code: str
     client: str
@@ -19,12 +18,11 @@ class OrdemDeProducao:
     barcode: str
     quantity: str
     box_count: int
-    weight: float
+    weight: int
 
-    def __init__(self, code: int, material_co: str, client: str, description: str, barcode: str, quantity: str, box_count: int = "1", weight: float = ""):
-        self.today = dt.now().strftime("%d/%m/%Y")
+    def __init__(self, code: int, material_code: str, client: str, description: str, barcode: str, quantity: int, box_count: int = "1", weight: int = 0):
         self.code = code
-        self.material_code = material_co
+        self.material_code = material_code
         self.client = client
         self.description = description
         self.barcode = barcode
@@ -37,9 +35,9 @@ class OrdensDeProducao:
     instances: dict[int, int] = {}
 
     @classmethod
-    def create(cls, code: int, material_code: str, client: str, description: str, barcode: str, quantity: int) -> None:
+    def create(cls, code: int, material_code: str, client: str, description: str, barcode: str, quantity: int, box_count: int, weight: int) -> None:
         # Cria uma nova instância de OP
-        instance = OrdemDeProducao(code, material_code, client, description, barcode, material_code, quantity)
+        instance = OrdemDeProducao(code, material_code, client, description, barcode,  quantity, box_count, weight)
         cls.instances[instance.code] = asdict(instance)
 
     @classmethod
@@ -65,7 +63,7 @@ def format_carga_maquina_json_data_to_op(raw: str, start_deliver_date: str, end_
           client: str = tr.find_all("td")[3].get_text(separator='', strip=True)
           description: str = tr.find_all("td")[5].get_text(separator='', strip=True)
           quantity: int = int(tr.find_all("td")[6].get_text(separator='', strip=True))
-          OrdensDeProducao.create(code, material_code, client, description, material_code, quantity)
+          OrdensDeProducao.create(code, material_code, client, description, material_code, quantity, 1, 0)
 
         # Formatando as ordens de produção para formato JSON decofidicado para UTF-8
         json_string = json.dumps(OrdensDeProducao.get_instances(), indent=4, ensure_ascii=False)
