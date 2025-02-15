@@ -94,6 +94,8 @@ class LabelGenerator(QWidget):
             op = json.load(file)
             op_data = op.get(self.op_input.text(), None)
             if op_data is not None:
+                print("CLIENTE CODE: ", op_data["client_code"])
+                print("NEW BARCODE: ", op_data["barcode"])
                 self.code_input.setText(op_data["material_code"])
                 self.client_input.setText(op_data["client"])
                 self.description_input.setText(op_data["description"])

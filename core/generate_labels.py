@@ -106,6 +106,8 @@ class Label(Canvas):
 
 
 if __name__ == "__main__":
-    op = OrdemDeProducao(223536, "CEA085 000 000", "CEABS SERVIÇOS ELETRONICOS LTDA", "MODULO ISCA 2GKF", "CEA085 000 000 (225664)", 2000, 1, 1050)
+    op = OrdemDeProducao(223536, "PRODUTO A", "CLIENTE A", "DESCRICAO PRODUTO A (PRODUTO A)", "DESCRICAO PRODUTO A", 2000, 1, "10,50")
+    op.get_client_code()
+    op.update_barcode()
     lb = Label(op)
     lb.generate_label()

@@ -1,3 +1,4 @@
+import re
 import json
 import pathlib
 import asyncio
@@ -14,6 +15,7 @@ class OrdemDeProducao:
     code: int
     material_code: str
     client: str
+    client_code: str
     description: str
     barcode: str
     quantity: str
@@ -24,11 +26,26 @@ class OrdemDeProducao:
         self.code = code
         self.material_code = material_code
         self.client = client
+        self.client_code = ""
         self.description = description
         self.barcode = barcode
         self.quantity = quantity
         self.box_count = box_count
         self.weight = weight
+
+
+    def get_client_code(self) -> None:
+        regex = r"\((.*?)\)"
+        code = re.search(regex, self.description)
+        if code is not None:
+            self.client_code = code.group(1)
+            return
+        return
+
+    def update_barcode(self,) -> None:
+        if self.client_code == "":
+            return
+        self.barcode = f"{self.material_code} ({self.client_code})"
 
 class OrdensDeProducao:
     # Atributo de classe para armazenar a lista de dicionários
@@ -38,10 +55,13 @@ class OrdensDeProducao:
     def create(cls, code: int, material_code: str, client: str, description: str, barcode: str, quantity: int, box_count: int, weight: int) -> None:
         # Cria uma nova instância de OP
         instance = OrdemDeProducao(code, material_code, client, description, barcode,  quantity, box_count, weight)
+        instance.get_client_code()
+        instance.update_barcode()
         cls.instances[instance.code] = asdict(instance)
 
     @classmethod
     def get_instances(cls) -> "OrdensDeProducao":
+        print(cls.instances)
         return cls.instances
 
     @classmethod
