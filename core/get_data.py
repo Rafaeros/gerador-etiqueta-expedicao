@@ -32,14 +32,17 @@ class OrdemDeProducao:
         self.quantity = quantity
         self.box_count = box_count
         self.weight = weight
+        self.get_client_code()
+        self.update_barcode()
 
 
     def get_client_code(self) -> None:
         regex = r"\((.*?)\)"
         code = re.search(regex, self.description)
-        if code is not None:
-            self.client_code = code.group(1)
+        if code is None:
+            self.client_code = ""
             return
+        self.client_code = code.group(1)
         return
 
     def update_barcode(self,) -> None:
