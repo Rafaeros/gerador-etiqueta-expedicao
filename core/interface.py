@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QGridLayout,
 )
+from PySide6.QtGui import QKeyEvent, QCloseEvent
 from core.get_data import get_op_data_by_codigo, get_all_op_data_on_carga_maquina, OrdemDeProducao
 from core.balance_communication import BalanceCommunication
 from core.generate_labels import Label
@@ -42,18 +43,27 @@ class LabelGenerator(QWidget):
         self.balance = BalanceCommunication()
         self.is_closing = False
     
-    def close_event(self, event):
-        if not self.is_closing:
-            event.ignore()
-            asyncio.create_task(self.handle_close())
+    def close_event(self):
+        asyncio.create_task(self.handle_close())
 
     async def handle_close(self):
-        self.is_closing = True
-        if self.balance.is_open:
-            self.balance.stop_serial()
-        self.balance.close()
-        self.close()
-        QApplication.quit()
+        response = QMessageBox.question(
+            self,
+            "Sair",
+            "Tem certeza que deseja sair?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No,
+        )
+
+        if response == QMessageBox.No:
+            return
+
+        if response == QMessageBox.Yes:      
+            if self.balance.is_open:
+                self.balance.stop_serial()
+            self.balance.close()
+            self.close()
+            QApplication.quit()
 
     def on_port_changed(self):
         self.balance.set_port(self.port_select.currentText())
@@ -106,7 +116,8 @@ class LabelGenerator(QWidget):
                     self.weight_input.setText(weight)
                 return
             QMessageBox.warning(self, "Erro", "OP não encontrada")
-            return
+        self.code_input.clearFocus()
+        return
 
     @qasync.asyncSlot()
     async def on_print_button_clicked(self):
@@ -138,8 +149,18 @@ class LabelGenerator(QWidget):
             QMessageBox.warning(self, "Erro", err_msg)
             return
 
+        self.on_clear_inputs_button_clicked()
         QMessageBox.information(self, "Sucesso", "Etiqueta impressa com sucesso")
 
+    def keyPressEvent(self, event: QKeyEvent):
+        print(f"Key pressed: {event.key()}")
+        if event.key() == Qt.Key.Key_Return:
+            self.on_search_button_clicked()
+        elif event.key() == Qt.Key_Delete:
+            self.on_clear_inputs_button_clicked()
+        elif event.key() == Qt.Key.Key_Escape:
+            self.close_event()
+        return
 
     def set_styles(self):
         # Global styles
