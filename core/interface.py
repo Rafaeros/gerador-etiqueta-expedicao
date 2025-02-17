@@ -32,7 +32,6 @@ ORDER_PATH: str = f"{TMP_PATH}/ordens_{start_deliver_date}_{end_deliver_date}.js
 
 class LabelGenerator(QWidget):
     balance: BalanceCommunication
-    is_closing: bool
 
     def __init__(self):
         super().__init__()
@@ -41,7 +40,6 @@ class LabelGenerator(QWidget):
         self.create_layout()
         self.set_styles()
         self.balance = BalanceCommunication()
-        self.is_closing = False
     
     def close_event(self):
         asyncio.create_task(self.handle_close())
@@ -68,6 +66,10 @@ class LabelGenerator(QWidget):
     def on_port_changed(self):
         self.balance.set_port(self.port_select.currentText())
         self.balance.connect()
+        if not self.balance.is_open:
+            QMessageBox.warning(self, "Erro", f"Erro ao conectar ao dispositivo na porta {self.balance.port}")
+            return
+        QMessageBox.information(self, "Sucesso", f"Conectado ao dispositivo na porta {self.balance.port}")
 
     def on_clear_inputs_button_clicked(self):
         self.op_input.clear()
@@ -98,26 +100,28 @@ class LabelGenerator(QWidget):
             QMessageBox.warning(self, "Erro", "OP não encontrada na API, puxando dados do Carga Máquina")
             op = await get_all_op_data_on_carga_maquina()
             if op is None:
-                QMessageBox.warning(self, "Erro", "Erro ao gerar arquivo dom as OPS")
+                QMessageBox.warning(self, "Erro", "Erro ao gerar arquivo do Carga Maquina com as OPS")
                 
         with open(ORDER_PATH, "r") as file:
             op = json.load(file)
             op_data = op.get(self.op_input.text(), None)
-            if op_data is not None:
-                self.code_input.setText(op_data["material_code"])
-                self.client_input.setText(op_data["client"])
-                self.description_input.setText(op_data["description"])
-                self.barcode_input.setText(op_data["barcode"])
-                self.quantity_input.setText(str(op_data["quantity"]))
-                self.box_count_input.setText(str(op_data["box_count"]))
-                self.weight_input.setText(str(op_data["weight"]))
-                if not self.weight_checkbox.isChecked():
-                    weight: str = str(self.balance.weight/100).replace(".", ",")
-                    self.weight_input.setText(weight)
+            if op_data is None:
+                QMessageBox.warning(self, "Erro", "OP não encontrada")
                 return
-            QMessageBox.warning(self, "Erro", "OP não encontrada")
-        self.code_input.clearFocus()
-        return
+
+            self.code_input.setText(op_data["material_code"])
+            self.client_input.setText(op_data["client"])
+            self.description_input.setText(op_data["description"])
+            self.barcode_input.setText(op_data["barcode"])
+            self.quantity_input.setText(str(op_data["quantity"]))
+            self.box_count_input.setText(str(op_data["box_count"]))
+            self.weight_input.setText(str(op_data["weight"]))
+            self.print_button.setFocus()
+            if self.weight_checkbox.isChecked() or not self.balance.is_open:
+                self.weight_input.setText("")
+                return
+            weight: str = str(self.balance.weight/100).replace(".", ",")
+            self.weight_input.setText(weight)
 
     @qasync.asyncSlot()
     async def on_print_button_clicked(self):
@@ -152,8 +156,8 @@ class LabelGenerator(QWidget):
         self.on_clear_inputs_button_clicked()
         QMessageBox.information(self, "Sucesso", "Etiqueta impressa com sucesso")
 
+
     def keyPressEvent(self, event: QKeyEvent):
-        print(f"Key pressed: {event.key()}")
         if event.key() == Qt.Key.Key_Return:
             self.on_search_button_clicked()
         elif event.key() == Qt.Key_Delete:
