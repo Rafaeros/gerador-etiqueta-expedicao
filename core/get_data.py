@@ -110,7 +110,7 @@ def format_carga_maquina_json_data_to_op(
     trs = soup.find_all("tr")[1:]
     for tr in trs:
         code: int = int(
-            tr.find_all("td")[2].get_text(separator="", strip=True).split("-")[-1]
+            tr.find_all("td")[2].get_text(separator="", strip=True).split("-")[-1][1:7]
         )
         material_code: str = tr.find_all("td")[4].get_text(separator="", strip=True)
         client: str = tr.find_all("td")[3].get_text(separator="", strip=True)
