@@ -141,13 +141,13 @@ class Label(Canvas):
     def normal_label(self, index: int = 1) -> tuple[bool, str]:
         elements_positions = {
             "date": {"x": MARGIN, "y": 215, "text": self.today_date.strftime("%d/%m/%Y"), "font": "FiraCodeRegular", "font_size": 12},
-            "lot": {"x": 113, "y": 215, "text": f"{index}/{self.op.box_count}", "font": "FiraCodeRegular", "font_size": 12},
+            #"lot": {"x": 113, "y": 215, "text": f"{index}/{self.op.box_count}", "font": "FiraCodeRegular", "font_size": 12},
             "line": {"x1": 0, "y1": 200, "x2": 428, "y2": 200},
             "client": {"x": MARGIN, "y": 170, "text": f"CLIENTE: {self.op.client}", "font": "FiraCodeRegular", "font_size": 12},
             "material_code": {"x": MARGIN, "y": 150, "text": f"CODIGO: {self.op.material_code}", "font": "FiraCodeBold", "font_size": 18},
             "description": {"x": MARGIN, "y": 118, "text": f"DESCRICAO: {self.op.description}", "font": "FiraCodeRegular", "font_size": 12},
             "barcode": {"x": -5, "y": 65, "text": self.op.barcode, "font": "FiraCodeRegular", "font_size": 12},
-            "quantity": {"x": MARGIN, "y": 20, "text": f"QUANTIDADE: {self.op.quantity/self.op.box_count:.0f}", "font": "FiraCodeRegular", "font_size": 12},
+            "quantity": {"x": MARGIN, "y": 20, "text": f"QUANTIDADE: {self.op.quantity/self.op.box_count:.0f} UND", "font": "FiraCodeRegular", "font_size": 12},
             "quantity_barcode" : {"x": 150, "y": 15, "text": f"{self.op.quantity/self.op.box_count:.0f}", "font": "FiraCodeRegular", "font_size": 12},
             "weight": {"x": 350, "y": 20, "text": f"{self.op.weight} KG", "font": "FiraCodeRegular", "font_size": 12}
         }
