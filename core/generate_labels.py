@@ -82,7 +82,7 @@ class Label(Canvas):
         barcode = code39.Standard39(barcode, barWidth = bar_width, barHeight = bar_height, ratio=ratio)
         barcode.drawOn(self, x, y)
 
-    def mwm_label(self, index: int = 1) -> (bool, str):
+    def mwm_label(self, index: int = 1) -> tuple[bool, str]:
         INTERNAL_MARGIN = 21.5*mm
 
         labels =  [
@@ -138,7 +138,7 @@ class Label(Canvas):
         self.showPage()
         return (True, "")
 
-    def normal_label(self, index: int = 1) -> (bool, str):
+    def normal_label(self, index: int = 1) -> tuple[bool, str]:
         elements_positions = {
             "date": {"x": MARGIN, "y": 215, "text": self.today_date.strftime("%d/%m/%Y"), "font": "FiraCodeRegular", "font_size": 12},
             "lot": {"x": 113, "y": 215, "text": f"{index}/{self.op.box_count}", "font": "FiraCodeRegular", "font_size": 12},
@@ -166,7 +166,7 @@ class Label(Canvas):
         self.showPage()
         return (True, "")
 
-    def generate_label(self) -> (bool, str):
+    def generate_label(self) -> tuple[bool, str]:
         if not self.op.quantity % self.op.box_count == 0:
             return (False, "Quantidade inválida, não é divisivel pelo numero de caixas.")
 
@@ -181,7 +181,7 @@ class Label(Canvas):
             print(e)
             return (False, "Erro ao gerar label")
 
-        #self.print_label(str(LABELS_PATH / f"{self.op.code}.pdf"))
+        self.print_label(str(LABELS_PATH / f"{self.op.code}.pdf"))
         return (True, "")
 
     def print_label(self, pdf_path: str) -> bool:

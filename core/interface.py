@@ -20,15 +20,20 @@ from PySide6.QtWidgets import (
     QGridLayout,
 )
 from PySide6.QtGui import QKeyEvent, QCloseEvent
-from core.get_data import get_op_data_by_codigo, get_all_op_data_on_carga_maquina, OrdemDeProducao
+from core.get_data import (
+    get_op_data_by_codigo,
+    get_all_op_data_on_carga_maquina,
+    OrdemDeProducao,
+)
 from core.balance_communication import BalanceCommunication
 from core.generate_labels import Label
 
-start_deliver_date: str = (dt.now()-timedelta(days=35)).strftime("%d-%m-%Y")
-end_deliver_date: str = (dt.now()+timedelta(days=35)).strftime("%d-%m-%Y")
+start_deliver_date: str = (dt.now() - timedelta(days=35)).strftime("%d-%m-%Y")
+end_deliver_date: str = (dt.now() + timedelta(days=35)).strftime("%d-%m-%Y")
 TMP_PATH: pathlib.Path = pathlib.Path().parent / "tmp/"
 TMP_PATH.mkdir(parents=True, exist_ok=True)
 ORDER_PATH: str = f"{TMP_PATH}/ordens_{start_deliver_date}_{end_deliver_date}.json"
+
 
 class LabelGenerator(QWidget):
     balance: BalanceCommunication
@@ -40,7 +45,7 @@ class LabelGenerator(QWidget):
         self.create_layout()
         self.set_styles()
         self.balance = BalanceCommunication()
-    
+
     def close_event(self):
         asyncio.create_task(self.handle_close())
 
@@ -56,7 +61,7 @@ class LabelGenerator(QWidget):
         if response == QMessageBox.No:
             return
 
-        if response == QMessageBox.Yes:      
+        if response == QMessageBox.Yes:
             if self.balance.is_open:
                 self.balance.stop_serial()
             self.balance.close()
@@ -67,9 +72,15 @@ class LabelGenerator(QWidget):
         self.balance.set_port(self.port_select.currentText())
         self.balance.connect()
         if not self.balance.is_open:
-            QMessageBox.warning(self, "Erro", f"Erro ao conectar ao dispositivo na porta {self.balance.port}")
+            QMessageBox.warning(
+                self,
+                "Erro",
+                f"Erro ao conectar ao dispositivo na porta {self.balance.port}",
+            )
             return
-        QMessageBox.information(self, "Sucesso", f"Conectado ao dispositivo na porta {self.balance.port}")
+        QMessageBox.information(
+            self, "Sucesso", f"Conectado ao dispositivo na porta {self.balance.port}"
+        )
 
     def on_clear_inputs_button_clicked(self) -> None:
         self.op_input.clear()
@@ -83,7 +94,7 @@ class LabelGenerator(QWidget):
 
     @qasync.asyncSlot()
     async def on_search_button_clicked(self) -> None:
-        if(self.op_input.text() == ""):
+        if self.op_input.text() == "":
             QMessageBox.warning(self, "Erro", "Por favor, insira o número da OP")
             return
         if not pathlib.Path(ORDER_PATH).exists():
@@ -97,11 +108,15 @@ class LabelGenerator(QWidget):
                 self.box_count_input.setText(str(op.box_count))
                 self.weight_input.setText(str(op.weight))
                 return
-            QMessageBox.warning(self, "Erro", "OP não encontrada na API, puxando dados do Carga Máquina")
+            QMessageBox.warning(
+                self, "Erro", "OP não encontrada na API, puxando dados do Carga Máquina"
+            )
             op = await get_all_op_data_on_carga_maquina()
             if op is None:
-                QMessageBox.warning(self, "Erro", "Erro ao gerar arquivo do Carga Maquina com as OPS")
-                
+                QMessageBox.warning(
+                    self, "Erro", "Erro ao gerar arquivo do Carga Maquina com as OPS"
+                )
+
         with open(ORDER_PATH, "r") as file:
             op = json.load(file)
             op_data = op.get(self.op_input.text(), None)
@@ -120,7 +135,7 @@ class LabelGenerator(QWidget):
                 self.weight_input.setText("")
                 self.weight_input.setFocus()
                 return
-            weight: str = str(self.balance.weight/100).replace(".", ",")
+            weight: str = str(self.balance.weight / 100).replace(".", ",")
             self.weight_input.setText(weight)
 
     @qasync.asyncSlot()
@@ -134,7 +149,9 @@ class LabelGenerator(QWidget):
             return
 
         if not self.quantity_input.text().isnumeric():
-            QMessageBox.warning(self, "Erro", "Por favor, insira a quantidade corretamente")
+            QMessageBox.warning(
+                self, "Erro", "Por favor, insira a quantidade corretamente"
+            )
             return
 
         op = OrdemDeProducao(
@@ -145,7 +162,7 @@ class LabelGenerator(QWidget):
             barcode=self.barcode_input.text(),
             quantity=int(self.quantity_input.text()),
             box_count=int(self.box_count_input.text()),
-            weight= self.weight_input.text()
+            weight=self.weight_input.text(),
         )
         label = Label(op)
         err, err_msg = label.generate_label()
@@ -155,7 +172,6 @@ class LabelGenerator(QWidget):
 
         self.on_clear_inputs_button_clicked()
         QMessageBox.information(self, "Sucesso", "Etiqueta impressa com sucesso")
-
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         match event.key():
@@ -171,7 +187,8 @@ class LabelGenerator(QWidget):
 
     def set_styles(self) -> None:
         # Global styles
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
 
             QWidget {
                 background-color: #f0f0f0;
@@ -207,11 +224,12 @@ class LabelGenerator(QWidget):
                 background-color: #2D6187;
                 border: 1px solid #000000;
             }
-        """)
+        """
+        )
 
         self.clear_inputs_button.setStyleSheet("background-color: #B82132")
 
-    def create_layout(self)  -> None:
+    def create_layout(self) -> None:
         # Layouts
         self.v_layout = QVBoxLayout()
         self.form_layout = QFormLayout()
@@ -221,7 +239,7 @@ class LabelGenerator(QWidget):
 
         # Checkbox
         self.weight_checkbox = QCheckBox("Inserir peso manualmente?")
-        
+
         # Dropdown menu
         self.port_select = QComboBox()
 
@@ -234,49 +252,87 @@ class LabelGenerator(QWidget):
             {"label": "barcode_label", "text": "Código de barras:"},
             {"label": "quantity_label", "text": "Quantidade total:"},
             {"label": "box_count_label", "text": "Quantidade de caixas:"},
-            {"label": "weight_label", "text": "Peso do produto:"}
+            {"label": "weight_label", "text": "Peso do produto:"},
         ]
         inputs: list[dict] = [
-            {"input": "op_input", "placeholder": "Número da OP", "row": 0, "col": 1, "width": 200},
-            {"input": "code_input", "placeholder": "Código do produto", "row": 1, "col": 1, "width": 200},
+            {
+                "input": "op_input",
+                "placeholder": "Número da OP",
+                "row": 0,
+                "col": 1,
+                "width": 200,
+            },
+            {
+                "input": "code_input",
+                "placeholder": "Código do produto",
+                "row": 1,
+                "col": 1,
+                "width": 200,
+            },
             {"input": "client_input", "placeholder": "Nome do cliente", "width": 600},
-            {"input": "description_input", "placeholder": "Descrição do produto", "width": 600},
+            {
+                "input": "description_input",
+                "placeholder": "Descrição do produto",
+                "width": 600,
+            },
             {"input": "barcode_input", "placeholder": "Código de barras", "width": 600},
-            {"input": "quantity_input", "placeholder": "Quantidade total", "width": 200},
-            {"input": "box_count_input", "placeholder": "Quantidade de caixas", "width": 200},
-            {"input": "weight_input", "placeholder": "Peso do produto", "width": 200}
+            {
+                "input": "quantity_input",
+                "placeholder": "Quantidade total",
+                "width": 200,
+            },
+            {
+                "input": "box_count_input",
+                "placeholder": "Quantidade de caixas",
+                "width": 200,
+            },
+            {"input": "weight_input", "placeholder": "Peso do produto", "width": 200},
         ]
         # Buttons
         buttons: list[dict] = [
             {"button": "search_button", "text": "Buscar", "row": 0, "col": 2},
             {"button": "clear_inputs_button", "text": "Limpar", "row": 1, "col": 2},
-            {"button": "print_button", "text": "Imprimir",}
+            {
+                "button": "print_button",
+                "text": "Imprimir",
+            },
         ]
 
         for label, input in zip(labels, inputs):
             setattr(self, label["label"], QLabel(label["text"]))
             getattr(self, label["label"]).setFixedWidth(200)
 
-            setattr(self, input["input"], QLineEdit()) 
+            setattr(self, input["input"], QLineEdit())
             getattr(self, input["input"]).setPlaceholderText(input["placeholder"])
             getattr(self, input["input"]).setFixedWidth(input["width"])
 
             if "row" and "col" not in label:
-                self.form_layout.addRow(getattr(self, label["label"]), getattr(self, input["input"]))
+                self.form_layout.addRow(
+                    getattr(self, label["label"]), getattr(self, input["input"])
+                )
 
             if "row" and "col" in label:
-                self.grid_layout.addWidget(getattr(self, label["label"]), label["row"], label["col"])
-                self.grid_layout.addWidget(getattr(self, input["input"]), input["row"], input["col"])
-            
+                self.grid_layout.addWidget(
+                    getattr(self, label["label"]), label["row"], label["col"]
+                )
+                self.grid_layout.addWidget(
+                    getattr(self, input["input"]), input["row"], input["col"]
+                )
+
             if "row" and "col" in input:
-                self.grid_layout.addWidget(getattr(self, label["label"].replace("label", "input")), input["row"], input["col"])
-            
+                self.grid_layout.addWidget(
+                    getattr(self, label["label"].replace("label", "input")),
+                    input["row"],
+                    input["col"],
+                )
 
         for i, button in enumerate(buttons):
             setattr(self, button["button"], QPushButton(button["text"]))
             if "row" and "col" in button:
-                self.grid_layout.addWidget(getattr(self, button["button"]), button["row"], button["col"])
-        
+                self.grid_layout.addWidget(
+                    getattr(self, button["button"]), button["row"], button["col"]
+                )
+
         # COM ports
         for i in range(1, 10):
             self.port_select.addItem(f"COM{i}")
@@ -286,7 +342,7 @@ class LabelGenerator(QWidget):
 
         # Button actions
         self.search_button.clicked.connect(self.on_search_button_clicked)
-        self.clear_inputs_button.clicked.connect(self.on_clear_inputs_button_clicked)  
+        self.clear_inputs_button.clicked.connect(self.on_clear_inputs_button_clicked)
         self.print_button.clicked.connect(self.on_print_button_clicked)
 
         # Layouts
@@ -302,6 +358,7 @@ class LabelGenerator(QWidget):
         self.v_layout.addStretch()
         self.setLayout(self.v_layout)
 
+
 async def app() -> None:
     app = QApplication(sys.argv)
     loop = qasync.QEventLoop(app)
@@ -311,6 +368,6 @@ async def app() -> None:
     async with loop:
         loop.run_forever()
 
+
 if __name__ == "__main__":
     asyncio.run(app())
-    
