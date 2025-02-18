@@ -70,7 +70,7 @@ class Label(Canvas):
     def _get_string_width(self, text: str, font = "FiraCodeRegular", font_size = 10) -> int:
         return self.stringWidth(text, font, font_size)
 
-    def _create_label_barcode(self, x: int, y: int, barcode: str, barWidth = 1.4, barHeight = 30, max_width = LABEL_SIZE[0], font = "FiraCodeRegular", font_size = 10, min_scale = 1.1):
+    def _create_label_barcode(self, x: int, y: int, barcode: str, barWidth = 1.4, barHeight = 30, max_width = LABEL_SIZE[0], font = "FiraCodeRegular", font_size = 10, min_scale = 1.1)  -> None:
         barcode = Code128(barcode, barWidth = barWidth, barHeight = barHeight, humanReadable = True, fontName = font, fontSize = font_size)
         scale = min((max_width-x) / barcode.width, min_scale)
         self.saveState()
@@ -78,7 +78,7 @@ class Label(Canvas):
         barcode.drawOn(self, x/scale, y)
         self.restoreState()
 
-    def _create_mwm_label_barcode(self, x: int, y: int, barcode: str,):
+    def _create_mwm_label_barcode(self, x: int, y: int, barcode: str,)  -> None:
         barcode = code39.Standard39(barcode, bar_width = 5*mm, barHeight = 8*mm)
         barcode.drawOn(self, x, y)
 

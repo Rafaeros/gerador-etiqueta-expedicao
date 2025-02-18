@@ -9,7 +9,7 @@ class BalanceCommunication(serial.Serial):
     weight: int
     running: bool
 
-    def __init__(self):
+    def __init__(self)  -> None:
         super().__init__()
         self.set_baudrate()
         self.set_timeout()
@@ -46,8 +46,13 @@ class BalanceCommunication(serial.Serial):
                 sio.flush()
             except serial.SerialException:
                 return "Serial error"
+                self.reconnect()
             
-    def stop_serial(self):
+    def reconnect(self) -> None:
+        self.stop_serial()
+        self.connect()
+            
+    def stop_serial(self)  -> None:
         if self.is_open:
             self.close()
         self.running = False

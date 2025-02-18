@@ -33,7 +33,7 @@ ORDER_PATH: str = f"{TMP_PATH}/ordens_{start_deliver_date}_{end_deliver_date}.js
 class LabelGenerator(QWidget):
     balance: BalanceCommunication
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle("Gerador de Etiquetas")
         self.setFixedSize(1200, 600)
@@ -44,7 +44,7 @@ class LabelGenerator(QWidget):
     def close_event(self):
         asyncio.create_task(self.handle_close())
 
-    async def handle_close(self):
+    async def handle_close(self) -> None:
         response = QMessageBox.question(
             self,
             "Sair",
@@ -63,7 +63,7 @@ class LabelGenerator(QWidget):
             self.close()
             QApplication.quit()
 
-    def on_port_changed(self):
+    def on_port_changed(self) -> None:
         self.balance.set_port(self.port_select.currentText())
         self.balance.connect()
         if not self.balance.is_open:
@@ -71,7 +71,7 @@ class LabelGenerator(QWidget):
             return
         QMessageBox.information(self, "Sucesso", f"Conectado ao dispositivo na porta {self.balance.port}")
 
-    def on_clear_inputs_button_clicked(self):
+    def on_clear_inputs_button_clicked(self) -> None:
         self.op_input.clear()
         self.code_input.clear()
         self.client_input.clear()
@@ -82,7 +82,7 @@ class LabelGenerator(QWidget):
         self.weight_input.clear()
 
     @qasync.asyncSlot()
-    async def on_search_button_clicked(self):
+    async def on_search_button_clicked(self) -> None:
         if(self.op_input.text() == ""):
             QMessageBox.warning(self, "Erro", "Por favor, insira o número da OP")
             return
@@ -157,7 +157,7 @@ class LabelGenerator(QWidget):
         QMessageBox.information(self, "Sucesso", "Etiqueta impressa com sucesso")
 
 
-    def keyPressEvent(self, event: QKeyEvent):
+    def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.key() == Qt.Key.Key_Return:
             self.on_search_button_clicked()
         elif event.key() == Qt.Key_Delete:
@@ -166,7 +166,7 @@ class LabelGenerator(QWidget):
             self.close_event()
         return
 
-    def set_styles(self):
+    def set_styles(self) -> None:
         # Global styles
         self.setStyleSheet("""
 
@@ -208,7 +208,7 @@ class LabelGenerator(QWidget):
 
         self.clear_inputs_button.setStyleSheet("background-color: #B82132")
 
-    def create_layout(self):
+    def create_layout(self)  -> None:
         # Layouts
         self.v_layout = QVBoxLayout()
         self.form_layout = QFormLayout()
@@ -299,7 +299,7 @@ class LabelGenerator(QWidget):
         self.v_layout.addStretch()
         self.setLayout(self.v_layout)
 
-async def app():
+async def app() -> None:
     app = QApplication(sys.argv)
     loop = qasync.QEventLoop(app)
     asyncio.set_event_loop(loop)
