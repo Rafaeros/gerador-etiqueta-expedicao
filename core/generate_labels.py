@@ -79,7 +79,7 @@ class Label(Canvas):
         self.restoreState()
 
     def _create_mwm_label_barcode(self, x: int, y: int, barcode: str, bar_width, bar_height, ratio)  -> None:
-        barcode = code39.Standard39(barcode, barWidth = bar_width, barHeight = bar_height, ratio=ratio)
+        barcode = code39.Standard39(barcode, barWidth = bar_width, barHeight = bar_height, ratio=ratio, checksum=False)
         barcode.drawOn(self, x, y)
 
     def mwm_label(self, index: int = 1) -> tuple[bool, str]:
@@ -107,10 +107,10 @@ class Label(Canvas):
         ]
 
         barcodes = [
-            {"x": 15*mm, "y": 48*mm, "bar_width": 0.25*mm, "bar_height": 8*mm, "ratio": 2.7},
-            {"x": 15*mm, "y": 34*mm, "bar_width": 0.30*mm, "bar_height": 8*mm, "ratio": 2.7},
-            {"x": 15*mm, "y": 20.3*mm, "bar_width": 0.30*mm, "bar_height": 8*mm, "ratio": 2.7},
-            {"x": 15*mm, "y": 7*mm, "bar_width": 0.25*mm, "bar_height": 8*mm, "ratio": 2.2}
+            {"x": 15*mm, "y": 48*mm, "bar_width": 0.3*mm, "bar_height": 8*mm, "ratio": 2.2},
+            {"x": 15*mm, "y": 34*mm, "bar_width": 0.4*mm, "bar_height": 8*mm, "ratio": 2.2},
+            {"x": 15*mm, "y": 20.3*mm, "bar_width": 0.4*mm, "bar_height": 8*mm, "ratio": 2.2},
+            {"x": 15*mm, "y": 7*mm, "bar_width": 0.26*mm, "bar_height": 8*mm, "ratio": 2.2}
         ]
 
         lines = [
