@@ -47,7 +47,6 @@ class BalanceCommunication(serial.Serial):
                 sio.flush()
             except serial.SerialException:
                 self.reconnect()
-                return "Serial error"
 
     def reconnect(self) -> None:
         self.stop_serial()
