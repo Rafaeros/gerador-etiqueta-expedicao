@@ -78,8 +78,8 @@ class Label(Canvas):
         barcode.drawOn(self, x/scale, y)
         self.restoreState()
 
-    def _create_mwm_label_barcode(self, x: int, y: int, barcode: str,)  -> None:
-        barcode = code39.Standard39(barcode, bar_width = 5*mm, barHeight = 8*mm)
+    def _create_mwm_label_barcode(self, x: int, y: int, barcode: str, bar_width, bar_height, ratio)  -> None:
+        barcode = code39.Standard39(barcode, barWidth = bar_width, barHeight = bar_height, ratio=ratio)
         barcode.drawOn(self, x, y)
 
     def mwm_label(self, index: int = 1) -> (bool, str):
@@ -89,7 +89,7 @@ class Label(Canvas):
             {"x": MWM_MARGIN, "y": 69*mm, "text": "MWM MOTORES E GERADORES", "font": "YugoSemiBold", "font_size": 9},
             {"x": 87*mm, "y": 69*mm, "text": "V.2.3.4", "font": "YugoSemiBold", "font_size": 9},
             {"x": 8*mm, "y": 66*mm, "text": "Part:", "font": "LucidaConsoleRegular", "font_size": 10},
-            {"x": INTERNAL_MARGIN, "y": 55*mm, "text": "fornecedor/fabricante", "font": "YugoSemiBold", "font_size": 6},
+            {"x": INTERNAL_MARGIN, "y": 54.9*mm, "text": "fornecedor/fabricante", "font": "YugoSemiBold", "font_size": 6},
             {"x": 8*mm, "y": 43*mm, "text": "Supplier:15175", "font": "LucidaConsoleRegular", "font_size": 8},
             {"x": 72*mm, "y": 43.5*mm, "text": "Date:", "font": "YugoSemiBold", "font_size": 10},
             {"x": 8*mm, "y": 40*mm, "text": "Qty:", "font": "LucidaConsoleRegular", "font_size": 10},
@@ -107,10 +107,10 @@ class Label(Canvas):
         ]
 
         barcodes = [
-            {"x": 15*mm, "y": 48*mm},
-            {"x": 15*mm, "y": 34*mm},
-            {"x": 15*mm, "y": 20.3*mm},
-            {"x": 15*mm, "y": 7*mm}
+            {"x": 15*mm, "y": 48*mm, "bar_width": 0.25*mm, "bar_height": 8*mm, "ratio": 2.7},
+            {"x": 15*mm, "y": 34*mm, "bar_width": 0.30*mm, "bar_height": 8*mm, "ratio": 2.7},
+            {"x": 15*mm, "y": 20.3*mm, "bar_width": 0.30*mm, "bar_height": 8*mm, "ratio": 2.7},
+            {"x": 15*mm, "y": 7*mm, "bar_width": 0.25*mm, "bar_height": 8*mm, "ratio": 2.2}
         ]
 
         lines = [
@@ -126,10 +126,10 @@ class Label(Canvas):
             self._draw_text(value["x"], value["y"], value["text"], value["font"], value["font_size"])
             if value["x"] == 75*mm:
                 qty_size = self._get_string_width(value["text"], value["font"], value["font_size"])
-                x_label = value["x"] + qty_size + 1*mm
+                x_label = value["x"] + qty_size + 2*mm
                 self._draw_text(x_label, 35.2*mm, "PCs", "DubaiBold", 12.5)
 
-            self._create_mwm_label_barcode(barcode["x"], barcode["y"], value["text"])
+            self._create_mwm_label_barcode(barcode["x"], barcode["y"], value["text"], barcode["bar_width"], barcode["bar_height"], barcode["ratio"])
 
         for line in lines:
             self.line(line["x1"], line["y1"], line["x2"], line["y2"])
