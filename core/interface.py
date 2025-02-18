@@ -116,9 +116,9 @@ class LabelGenerator(QWidget):
             self.quantity_input.setText(str(op_data["quantity"]))
             self.box_count_input.setText(str(op_data["box_count"]))
             self.weight_input.setText(str(op_data["weight"]))
-            self.print_button.setFocus()
             if self.weight_checkbox.isChecked() or not self.balance.is_open:
                 self.weight_input.setText("")
+                self.weight_input.setFocus()
                 return
             weight: str = str(self.balance.weight/100).replace(".", ",")
             self.weight_input.setText(weight)
@@ -158,13 +158,16 @@ class LabelGenerator(QWidget):
 
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
-        if event.key() == Qt.Key.Key_Return:
-            self.on_search_button_clicked()
-        elif event.key() == Qt.Key_Delete:
-            self.on_clear_inputs_button_clicked()
-        elif event.key() == Qt.Key.Key_Escape:
-            self.close_event()
-        return
+        match event.key():
+            case Qt.Key.Key_Return if self.weight_input.hasFocus():
+                self.on_print_button_clicked()
+                self.code_input.setFocus()
+            case Qt.Key.Key_Return:
+                self.on_search_button_clicked()
+            case Qt.Key.Key_Delete:
+                self.on_clear_inputs_button_clicked()
+            case Qt.Key.Key_Escape:
+                self.close_event()
 
     def set_styles(self) -> None:
         # Global styles
