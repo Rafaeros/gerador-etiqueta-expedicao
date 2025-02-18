@@ -170,6 +170,7 @@ dependencies = [
     { name = "asyncio" },
     { name = "beautifulsoup4" },
     { name = "datetime" },
+    { name = "logging" },
     { name = "pyserial" },
     { name = "pyside6" },
     { name = "pywin32" },
@@ -183,6 +184,7 @@ requires-dist = [
     { name = "asyncio", specifier = ">=3.4.3" },
     { name = "beautifulsoup4", specifier = ">=4.13.3" },
     { name = "datetime", specifier = ">=5.5" },
+    { name = "logging", specifier = ">=0.4.9.6" },
     { name = "pyserial", specifier = ">=3.5" },
     { name = "pyside6", specifier = ">=6.8.1.1" },
     { name = "pywin32", specifier = ">=308" },
@@ -198,6 +200,12 @@ sdist = { url = "https://files.pythonhosted.org/packages/f1/70/7703c29685631f5a7
 wheels = [
     { url = "https://files.pythonhosted.org/packages/76/c6/c88e154df9c4e1a2a66ccf0005a88dfb2650c1dffb6f5ce603dfbd452ce3/idna-3.10-py3-none-any.whl", hash = "sha256:946d195a0d259cbba61165e88e65941f16e9b36ea6ddb97f00452bae8b1287d3", size = 70442 },
 ]
+
+[[package]]
+name = "logging"
+version = "0.4.9.6"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/93/4b/979db9e44be09f71e85c9c8cfc42f258adfb7d93ce01deed2788b2948919/logging-0.4.9.6.tar.gz", hash = "sha256:26f6b50773f085042d301085bd1bf5d9f3735704db9f37c1ce6d8b85c38f2417", size = 96029 }
 
 [[package]]
 name = "multidict"
