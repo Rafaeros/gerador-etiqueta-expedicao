@@ -258,7 +258,7 @@ class Label(Canvas):
             {"x": 15*mm, "y": 48*mm, "bar_width": 0.3*mm, "bar_height": 8*mm, "ratio": 2.2},
             {"x": 15*mm, "y": 34*mm, "bar_width": 0.4*mm, "bar_height": 8*mm, "ratio": 2.2},
             {"x": 15*mm, "y": 20.3*mm, "bar_width": 0.4*mm, "bar_height": 8*mm, "ratio": 2.2},
-            {"x": 15*mm, "y": 7*mm, "bar_width": 0.26*mm, "bar_height": 8*mm, "ratio": 2.2}
+            {"x": 15*mm, "y": 7*mm, "bar_width": 0.265*mm, "bar_height": 8*mm, "ratio": 2.2}
         ]
 
         lines = [
