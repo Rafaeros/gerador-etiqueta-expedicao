@@ -29,6 +29,7 @@ import logging
 import pathlib
 import platform
 from datetime import datetime as dt
+from zebrafy import ZebrafyPDF
 from reportlab.pdfgen.canvas import Canvas
 from reportlab.platypus import Paragraph
 from reportlab.graphics.barcode.code128 import Code128
@@ -40,7 +41,6 @@ from reportlab.lib.units import mm
 from core.get_data import OrdemDeProducao
 
 if platform.system() == "Windows":
-    import win32api
     import win32print
 
 LABEL_SIZE: int = (428, 283)
@@ -372,21 +372,25 @@ class Label(Canvas):
             - Returns True if the print operation is successful.
             - Returns False if any error occurs during the print process.
         """     
-        printer = win32print.GetDefaultPrinter()
-        hprinter = win32print.OpenPrinter(printer)
+        printer_name = win32print.GetDefaultPrinter()
+        printer = win32print.OpenPrinter(printer_name)
         try:
-            win32api.ShellExecute(0, "print", pdf_path, None, ".", 0)
+            print(f"Printing {pdf_path} on {printer_name} with ZebrafyPDF")
+            with open(pdf_path, "rb") as file:
+                label_zpl = ZebrafyPDF(file.read()).to_zpl()
+                win32print.StartDocPrinter(printer, 1, ("Label", None, "RAW"))  # type: ignore
+                win32print.StartPagePrinter(printer)
+                win32print.WritePrinter(printer, label_zpl.encode("utf-8"))
+                win32print.EndPagePrinter(printer)
+                win32print.EndDocPrinter(printer)
         except FileNotFoundError:
             logging.error("Arquivo nao encontrado")
             return False
         except PermissionError:
             logging.error("Permissao negada")
             return False
-        except win32api.error:
-            logging.error("Erro ao imprimir")
-            return False
         finally:
-            win32print.ClosePrinter(hprinter)
+            win32print.ClosePrinter(printer)
         return True
 
 
