@@ -1,63 +1,77 @@
-# 📦 Gerador de Etiquetas
+# Gerador de Etiqueta de Expedição
 
-Este projeto é um gerador de etiquetas, criado para facilitar a criação e personalização de etiquetas de código de barras e automatização. 
+![Badge](https://img.shields.io/badge/Python->=3.12-blue.svg) ![Badge](https://img.shields.io/badge/Status-Em%20desenvolvimento-yellow)
 
-## 📋 Pré-requisitos
+## 📌 Sobre o Projeto
 
-- É necessário ter um leitor de PDF padrão instalado no sistema (não utilize navegadores para abrir os PDFs gerados).
+O **Gerador de Etiqueta de Expedição** é uma aplicação desenvolvida em Python para a criação automatizada de etiquetas de expedição, facilitando o processo logístico e garantindo precisão nas informações impressas. 
 
-## 🚀 Instalação
+## 🚀 Bibliotecas Utilizadas
 
-1. Clone este repositório:
+- **PySide6** (para criação da interface)
+- **PySerial** (para comunicação com balança)
+- **AioHTTP** (para requisições assíncronas para coleta de dados)
+- **BeautifulSoup** (para coleta de dados das requisições feitas pelo **AioHTTP**)
+- **Json** (para gerar um relatório dos dados em formato json, para ser acessado pela aplicação)
+- **ReportLab** (para geração de arquivos PDF com código de barras.)
+- **PyWin32** (para manipulação de impressão nas impressoras Zebra)
 
-    ```bash
-    git clone https://github.com/Rafaeros/gerador-de-etiqueta.git
-    ```
+## 📂 Estrutura do Projeto
 
-2. Navegue até o diretório do projeto:
+```
+📦 gerador-etiqueta-expedicao
+ ┣ 📂 core
+ ┃ ┣ 📂 assets
+ ┃ ┣ 📜 balance_communication.py
+ ┃ ┣ 📜 generate_labels.py
+ ┃ ┣ 📜 get_data.py
+ ┃ ┣ 📜 interface.py
+ ┃ ┗ 📜 requests_api_go.py
+ ┣ 📜 .gitignore
+ ┣ 📜 main.py
+ ┣ 📜 pyproject.toml
+ ┗ 📜 README.md
+```
 
-    ```bash
-    cd gerador-de-etiqueta
-    ```
+## 📥 Instalação
 
-3. Crie um ambiente virtual:
+1. Clone o repositório:
+   ```sh
+   git clone https://github.com/Rafaeros/gerador-etiqueta-expedicao.git
+   ```
+2. Acesse o diretório do projeto:
+   ```sh
+   cd gerador-etiqueta-expedicao
+   ```
+3. Instale o Python uv e acesse o ambiente virtual:
+   ```sh
+   uv sync
+   Linux: source venv/bin/activate
+   Windows: venv/Scripts/activate.ps1
+   ```
 
-    ```bash
-    python -m venv venv
-    ```
+## 🖨️ Como Usar
 
-4. Ative o ambiente virtual:
+1. Execute o script principal:
+   ```sh
+   python main.py
+   ```
+2. Configure os parâmetros necessários para gerar as etiquetas.
+3. As etiquetas geradas serão salvas no diretório especificado.
 
-    - No Windows:
-        ```bash
-        .\venv\Scripts\activate
-        ```
-    - No macOS e Linux:
-        ```bash
-        source venv/bin/activate
-        ```
+## 📜 Licença
 
-5. Instale as dependências do projeto:
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
-    ```bash
-    pip install -r requirements.txt
-    ```
+## ✨ Contribuição
 
-## 📈 Uso
-
-1. Certifique-se de que o ambiente virtual esteja ativado.
-2. Execute o script principal do projeto:
-
-    ```bash
-    python main.py
-    ```
-
-## 🤝 Contribuição
-
-Se você deseja contribuir com este projeto, sinta-se à vontade para fazer um fork do repositório e enviar pull requests. Qualquer ajuda é bem-vinda!
-
-
+Contribuições são bem-vindas! Para contribuir:
+1. Fork este repositório
+2. Crie uma branch (`git checkout -b feature/minha-feature`)
+3. Commit suas mudanças (`git commit -m 'Adiciona nova feature'`)
+4. Faça push da sua branch (`git push origin feature/minha-feature`)
+5. Abra um Pull Request
 
 ---
 
-### 💻  Desenvolvido por [Rafael Costa](https://github.com/Rafaeros)
+💡 Desenvolvido por [Rafaeros](https://github.com/Rafaeros)
