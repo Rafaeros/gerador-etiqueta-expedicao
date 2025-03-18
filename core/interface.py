@@ -2,8 +2,9 @@ import sys
 import json
 import pathlib
 import asyncio
-import qasync
+import logging
 from datetime import timedelta, datetime as dt
+import qasync
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QApplication,
@@ -19,7 +20,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QGridLayout,
 )
-from PySide6.QtGui import QKeyEvent, QCloseEvent
+from PySide6.QtGui import QKeyEvent
 from core.get_data import (
     get_op_data_by_codigo,
     get_all_op_data_on_carga_maquina,
@@ -34,6 +35,12 @@ TMP_PATH: pathlib.Path = pathlib.Path().parent / "tmp/"
 TMP_PATH.mkdir(parents=True, exist_ok=True)
 ORDER_PATH: str = f"{TMP_PATH}/ordens_{start_deliver_date}_{end_deliver_date}.json"
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    datefmt="%d/%m/%Y %H:%M:%S",
+)
+
 
 class LabelGenerator(QWidget):
     balance: BalanceCommunication
@@ -45,6 +52,7 @@ class LabelGenerator(QWidget):
         self.create_layout()
         self.set_styles()
         self.balance = BalanceCommunication()
+        logging.info("Initializing interface")
 
     def close_event(self):
         asyncio.create_task(self.handle_close())
@@ -77,10 +85,12 @@ class LabelGenerator(QWidget):
                 "Erro",
                 f"Erro ao conectar ao dispositivo na porta {self.balance.port}",
             )
+            logging.error("Error to connect to device on port %s", self.balance.port)
             return
         QMessageBox.information(
             self, "Sucesso", f"Conectado ao dispositivo na porta {self.balance.port}"
         )
+        logging.info("Connected to device on port %s", self.balance.port)
 
     def on_clear_inputs_button_clicked(self) -> None:
         self.op_input.clear()
@@ -96,10 +106,13 @@ class LabelGenerator(QWidget):
     async def on_search_button_clicked(self) -> None:
         if self.op_input.text() == "":
             QMessageBox.warning(self, "Erro", "Por favor, insira o número da OP")
+            logging.error("Invalid OP number")
             return
         if not pathlib.Path(ORDER_PATH).exists():
             op = await get_op_data_by_codigo(self.op_input.text())
+            logging.info("Trying to catch OP data from API")
             if op is not None:
+                logging.info("Error to get data on API, getting on CargaMaquina")
                 self.code_input.setText(op.material_code)
                 self.client_input.setText(op.client)
                 self.description_input.setText(op.description)
@@ -117,7 +130,8 @@ class LabelGenerator(QWidget):
                     self, "Erro", "Erro ao gerar arquivo do Carga Maquina com as OPS"
                 )
 
-        with open(ORDER_PATH, "r") as file:
+        with open(ORDER_PATH, "r", encoding="utf-8") as file:
+            logging.info("CargaMaquina file of OP data exists, getting data from file")
             op = json.load(file)
             op_data = op.get(self.op_input.text(), None)
             if op_data is None:
@@ -132,10 +146,12 @@ class LabelGenerator(QWidget):
             self.box_count_input.setText(str(op_data["box_count"]))
             self.weight_input.setText(str(op_data["weight"]))
             if self.weight_checkbox.isChecked() or not self.balance.is_open:
+                logging.info("Weight checkbox is checked or balance is not open, setting weight to None")
                 self.weight_input.setText("")
                 self.weight_input.setFocus()
                 return
             weight: str = str(self.balance.weight / 100).replace(".", ",")
+            logging.info("Trying to get weight from balance: %s", weight)
             self.weight_input.setText(weight)
 
     @qasync.asyncSlot()

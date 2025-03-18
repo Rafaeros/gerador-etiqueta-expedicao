@@ -76,12 +76,13 @@ class BalanceCommunication(serial.Serial):
                 line = sio.readline().strip()
                 if line.startswith("D"):
                     self.weight = int(line[1:].replace(".", ""))
+                    logging.info("Balance stable weight: %d", self.weight)
                     sio.flush()
                 sio.flush()
-                time.sleep(0.5)
             except serial.SerialException:
                 logging.error("Serial communication error, reconnecting...")
                 self.reconnect()
+            time.sleep(0.5)
 
     def reconnect(self) -> None:
         """Reconnects to the serial port and starts the reading thread."""
