@@ -4,6 +4,7 @@ import pathlib
 import asyncio
 import logging
 from datetime import timedelta, datetime as dt
+import webbrowser
 import qasync
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -189,6 +190,10 @@ class LabelGenerator(QWidget):
         self.on_clear_inputs_button_clicked()
         QMessageBox.information(self, "Sucesso", "Etiqueta impressa com sucesso")
 
+    def on_author_button_clicked(self):
+        url: str = "https://github.com/Rafaeros"
+        webbrowser.open(url)
+
     def keyPressEvent(self, event: QKeyEvent) -> None:
         match event.key():
             case Qt.Key.Key_Return if self.weight_input.hasFocus():
@@ -348,6 +353,8 @@ class LabelGenerator(QWidget):
                 self.grid_layout.addWidget(
                     getattr(self, button["button"]), button["row"], button["col"]
                 )
+        self.author_button = QPushButton("Feito por: Rafael Costa")
+        self.author_button.setStyleSheet("background-color: #0B5351; width: 200px")
 
         # COM ports
         for i in range(1, 10):
@@ -360,6 +367,7 @@ class LabelGenerator(QWidget):
         self.search_button.clicked.connect(self.on_search_button_clicked)
         self.clear_inputs_button.clicked.connect(self.on_clear_inputs_button_clicked)
         self.print_button.clicked.connect(self.on_print_button_clicked)
+        self.author_button.clicked.connect(self.on_author_button_clicked)
 
         # Layouts
         self.grid_layout.addWidget(self.port_select, 0, 3)
@@ -370,6 +378,7 @@ class LabelGenerator(QWidget):
         self.h_layout.addWidget(self.weight_checkbox)
         self.h_layout.addStretch()
         self.v_layout.addStretch()
+        self.h_layout.addWidget(self.author_button)
         self.v_layout.addLayout(self.h_layout)
         self.v_layout.addStretch()
         self.setLayout(self.v_layout)
