@@ -171,8 +171,8 @@ async def get_all_op_data_on_carga_maquina() -> dict | None:
         "yt0": "Entrar",
     }
 
-    start_deliver_date: str = (dt.now() - timedelta(days=35)).strftime("%d/%m/%Y")
-    end_deliver_date: str = (dt.now() + timedelta(days=35)).strftime("%d/%m/%Y")
+    start_deliver_date: str = (dt.now() - timedelta(days=50)).strftime("%d/%m/%Y")
+    end_deliver_date: str = (dt.now() + timedelta(days=50)).strftime("%d/%m/%Y")
     url: str = "https://app.cargamaquina.com.br/ordemProducao/exportarOrdens"
     params: dict[str, str] = {
         "OrdemProducao[codigo]": "",
