@@ -30,8 +30,8 @@ from core.get_data import (
 from core.balance_communication import BalanceCommunication
 from core.generate_labels import Label
 
-start_deliver_date: str = (dt.now() - timedelta(days=35)).strftime("%d-%m-%Y")
-end_deliver_date: str = (dt.now() + timedelta(days=35)).strftime("%d-%m-%Y")
+start_deliver_date: str = (dt.now() - timedelta(days=50)).strftime("%d-%m-%Y")
+end_deliver_date: str = (dt.now() + timedelta(days=50)).strftime("%d-%m-%Y")
 TMP_PATH: pathlib.Path = pathlib.Path().parent / "tmp/"
 TMP_PATH.mkdir(parents=True, exist_ok=True)
 ORDER_PATH: str = f"{TMP_PATH}/ordens_{start_deliver_date}_{end_deliver_date}.json"
