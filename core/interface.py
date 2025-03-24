@@ -131,7 +131,7 @@ class LabelGenerator(QWidget):
                     self, "Erro", "Erro ao gerar arquivo do Carga Maquina com as OPS"
                 )
 
-        with open(ORDER_PATH, "r", encoding="utf-8") as file:
+        with open(ORDER_PATH, "r") as file:
             logging.info("CargaMaquina file of OP data exists, getting data from file")
             op = json.load(file)
             op_data = op.get(self.op_input.text(), None)
