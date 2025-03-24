@@ -73,11 +73,10 @@ class BalanceCommunication(serial.Serial):
         sio = io.TextIOWrapper(io.BufferedRWPair(self, self))
         while self.running:
             try:
-                line = sio.readline().strip()
+                line = sio.readline()
                 if line.startswith("D"):
                     self.weight = int(line[1:].replace(".", ""))
                     logging.info("Balance stable weight: %d", self.weight)
-                    sio.flush()
                 sio.flush()
             except serial.SerialException:
                 logging.error("Serial communication error, reconnecting...")
