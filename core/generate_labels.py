@@ -27,8 +27,8 @@ Usage:
 
 import logging
 import pathlib
-import platform
 from datetime import datetime as dt
+import win32print
 from reportlab.pdfgen.canvas import Canvas
 from reportlab.platypus import Paragraph
 from reportlab.graphics.barcode.code128 import Code128
@@ -37,11 +37,9 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
+from zebrafy import ZebrafyPDF
 from core.get_data import OrdemDeProducao
 
-if platform.system() == "Windows":
-    import win32api
-    import win32print
 
 LABEL_SIZE: int = (428, 283)
 MWM_LABEL_SIZE = (105*mm, 75*mm)
@@ -74,10 +72,6 @@ class Label(Canvas):
         pdf_path (str): The file path where the generated PDF label will be saved.
         today_date (datetime): The current date, used for date-related label content.
     """
-    ordem: OrdemDeProducao
-    pdf_path: pathlib.Path
-    today_date: dt
-
 
     def __init__(self, ordem: OrdemDeProducao) -> None:
         """
@@ -258,7 +252,7 @@ class Label(Canvas):
             {"x": 15*mm, "y": 48*mm, "bar_width": 0.3*mm, "bar_height": 8*mm, "ratio": 2.2},
             {"x": 15*mm, "y": 34*mm, "bar_width": 0.4*mm, "bar_height": 8*mm, "ratio": 2.2},
             {"x": 15*mm, "y": 20.3*mm, "bar_width": 0.4*mm, "bar_height": 8*mm, "ratio": 2.2},
-            {"x": 15*mm, "y": 7*mm, "bar_width": 0.265*mm, "bar_height": 8*mm, "ratio": 2.2}
+            {"x": 14.5*mm, "y": 7*mm, "bar_width": 0.25*mm, "bar_height": 8*mm, "ratio": 2.45}
         ]
 
         lines = [
@@ -359,10 +353,10 @@ class Label(Canvas):
             logging.error(e, exc_info=True)
             return (False, str(e))
 
-        self.print_label(str(self.pdf_path))
+        self.print_label(self.pdf_path)
         return (True, "")
 
-    def print_label(self, pdf_path: str) -> bool:
+    def print_label(self, pdf_path: pathlib.Path) -> bool:
         """
         Prints the label from the provided PDF file path.
 
@@ -374,19 +368,32 @@ class Label(Canvas):
         """     
         printer = win32print.GetDefaultPrinter()
         hprinter = win32print.OpenPrinter(printer)
-        try:
-            win32api.ShellExecute(0, "print", pdf_path, None, ".", 0)
-        except FileNotFoundError:
-            logging.error("Arquivo nao encontrado")
+
+        if not pdf_path.exists():
+            logging.info("File not found")
             return False
+
+        try:
+            with open(pdf_path, "rb") as pdf:
+                zpl_string = ZebrafyPDF(
+                    pdf.read(),
+                    format="Z64",
+                    invert=True,
+                    complete_zpl=True,
+                    split_pages=True,
+                ).to_zpl()
+
+                win32print.StartDocPrinter(hprinter, 1, (f"Label {self.ordem.material_code}", None, "RAW"))  # type: ignore
+                win32print.StartPagePrinter(hprinter)
+                win32print.WritePrinter(hprinter, zpl_string.encode("utf-8"))
+                win32print.EndPagePrinter(hprinter)
+                win32print.EndDocPrinter(hprinter)
         except PermissionError:
             logging.error("Permissao negada")
             return False
-        except win32api.error:
-            logging.error("Erro ao imprimir")
-            return False
         finally:
             win32print.ClosePrinter(hprinter)
+        logging.info(f"Printed label {self.ordem.material_code}")
         return True
 
 
