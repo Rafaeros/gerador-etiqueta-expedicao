@@ -1,10 +1,9 @@
 import qasync
 import asyncio
-from PySide6.QtWidgets import QApplication
 from core.interface import LabelGenerator
 
 if __name__ == "__main__":
-    app = QApplication([])
+    app = qasync.QApplication([])
     loop = qasync.QEventLoop(app)
     asyncio.set_event_loop(loop)
     window = LabelGenerator()
