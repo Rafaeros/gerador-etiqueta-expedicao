@@ -132,7 +132,7 @@ class LabelGenerator(QWidget):
                 )
 
         with open(ORDER_PATH, "r") as file:
-            logging.info("CargaMaquina file of OP data exists, getting data from file")
+            logging.info("CargaMaquina file of OP data already exists, getting data from file")
             op = json.load(file)
             op_data = op.get(self.op_input.text(), None)
             if op_data is None:
