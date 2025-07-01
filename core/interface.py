@@ -23,7 +23,6 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtGui import QKeyEvent
 from core.get_data import (
-    get_op_data_by_codigo,
     get_all_op_data_on_carga_maquina,
     OrdemDeProducao,
 )
@@ -110,21 +109,6 @@ class LabelGenerator(QWidget):
             logging.error("Invalid OP number")
             return
         if not pathlib.Path(ORDER_PATH).exists():
-            op = await get_op_data_by_codigo(self.op_input.text())
-            logging.info("Trying to catch OP data from API")
-            if op is not None:
-                logging.info("Error to get data on API, getting on CargaMaquina")
-                self.code_input.setText(op.material_code)
-                self.client_input.setText(op.client)
-                self.description_input.setText(op.description)
-                self.barcode_input.setText(op.barcode)
-                self.quantity_input.setText(str(op.quantity))
-                self.box_count_input.setText(str(op.box_count))
-                self.weight_input.setText(str(op.weight))
-                return
-            QMessageBox.warning(
-                self, "Erro", "OP não encontrada na API, puxando dados do Carga Máquina"
-            )
             op = await get_all_op_data_on_carga_maquina()
             if op is None:
                 QMessageBox.warning(

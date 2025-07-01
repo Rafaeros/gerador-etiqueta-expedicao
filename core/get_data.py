@@ -5,6 +5,7 @@ This module contains functions to get data from the web or APIs
 import re
 import json
 import pathlib
+from typing import Any
 import asyncio
 import logging
 from dataclasses import dataclass, asdict
@@ -15,7 +16,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import NoSuchElementException
 from bs4 import BeautifulSoup
-from core.requests_api_go import fkapi_get_op_data_by_codigo
 
 TMP_PATH = "./tmp/"
 
@@ -36,7 +36,7 @@ class OrdemDeProducao:
     client_code: str
     description: str
     barcode: str
-    quantity: str
+    quantity: int
     box_count: int
     weight: int | str
 
@@ -48,7 +48,7 @@ class OrdemDeProducao:
         description: str,
         barcode: str,
         quantity: int,
-        box_count: int = "1",
+        box_count: int = 1,
         weight: int = 0,
     ):
         self.code = code
@@ -101,7 +101,7 @@ class OrdensDeProducao:
     Class to create a list of isntances of OrdemDeProducao
     """
 
-    instances: dict[int, int] = {}
+    instances: dict[int, Any] = {}
 
     @classmethod
     def create(
@@ -145,7 +145,7 @@ class OrdensDeProducao:
         cls.instances[instance.code] = asdict(instance)
 
     @classmethod
-    def get_instances(cls) -> "OrdensDeProducao":
+    def get_instances(cls) -> dict[int, Any]:
         """
         Returns a dictionary with all the instances of OrdemDeProducao.
 
@@ -157,7 +157,7 @@ class OrdensDeProducao:
         return cls.instances
 
     @classmethod
-    def find_by_codigo(cls, code) -> dict[int, int]:
+    def find_by_codigo(cls, code) -> dict[int, Any] | None:
         """
         Finds an OrdemDeProducao instance by its code.
 
@@ -186,13 +186,13 @@ def format_carga_maquina_json_data_to_op(
     soup = BeautifulSoup(raw, "html.parser")
     trs = soup.find_all("tr")[1:]
     for tr in trs:
-        code: int = (
-            tr.find_all("td")[2].get_text(separator="", strip=True).split("-")[-1][1:7]
+        code: int = int(
+            tr.find_all("td")[2].get_text(separator="", strip=True).split("-")[-1][1:7]  # type: ignore
         )
-        material_code: str = tr.find_all("td")[4].get_text(separator="", strip=True)
-        client: str = tr.find_all("td")[3].get_text(separator="", strip=True)
-        description: str = tr.find_all("td")[5].get_text(separator="", strip=True)
-        quantity: int = int(tr.find_all("td")[6].get_text(separator="", strip=True))
+        material_code: str = tr.find_all("td")[4].get_text(separator="", strip=True)  # type: ignore
+        client: str = tr.find_all("td")[3].get_text(separator="", strip=True)  # type: ignore
+        description: str = tr.find_all("td")[5].get_text(separator="", strip=True)  # type: ignore
+        quantity: int = int(tr.find_all("td")[6].get_text(separator="", strip=True))  # type: ignore
         OrdensDeProducao.create(
             code, material_code, client, description, material_code, quantity, 1, 0
         )
@@ -230,7 +230,7 @@ async def get_login_cookies(login_url: str) -> dict[str, str]:
     logging.info("Trying to get login cookies with selenium")
 
     options = Options()
-    options.add_argument("--headless")
+    # options.add_argument("--headless")
     options.add_argument("--disable-gpu")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
@@ -248,40 +248,11 @@ async def get_login_cookies(login_url: str) -> dict[str, str]:
     finally:
         driver.quit()
     cookies = {cookie["name"]: cookie["value"] for cookie in cookies}
+    print(cookies)
     return cookies
 
 
-async def get_op_data_by_codigo(codigo_ordem_producao: str) -> OrdemDeProducao | None:
-    """
-    Get the production order data by code from Go API.
-
-    Args:
-    - codigo_ordem_producao: str - The code of the production order.
-
-    Returns:
-    - OrdemDeProducao | None - The production order data, or None if an error occurs.
-    """
-    logging.info("Trying to get OP data from API")
-    try:
-        op_data: dict = await fkapi_get_op_data_by_codigo(codigo_ordem_producao)
-        if op_data is None:
-            logging.info("Error to get data on API")
-            return None
-        op_data = json.loads(op_data)
-        return OrdemDeProducao(
-            code=op_data["codigoOrdemProducao"],
-            material_code=op_data["codigoMaterial"],
-            client=op_data["cliente"],
-            description=op_data["descricaoMaterial"],
-            barcode=op_data["descricaoMaterial"],
-            quantity=op_data["quantidade"],
-        )
-    except json.decoder.JSONDecodeError:
-        logging.error("Error to decode Json data on API")
-        return None
-
-
-async def get_all_op_data_on_carga_maquina() -> dict | None:
+async def get_all_op_data_on_carga_maquina() -> str | None:
     """
     Get all production orders data from CargaMaquina with the given parameters.
 
@@ -297,12 +268,12 @@ async def get_all_op_data_on_carga_maquina() -> dict | None:
     Returns:
     - dict | None - The production orders data, or None if an error occurs.
     """
-    login_url: str = "https://app.cargamaquina.com.br/site/login/c/31.1~78,8%5E56,8"
-    cookies: list[dict] = await get_login_cookies(login_url)
+    login_url: str = "https://v2.cargamaquina.com.br/site/login/c/3.1~13,3%5e17,7"
+    cookies: dict[str, str] = await get_login_cookies(login_url)
     logging.info("Cookies get successfully")
     start_deliver_date: str = (dt.now() - timedelta(days=50)).strftime("%d/%m/%Y")
     end_deliver_date: str = (dt.now() + timedelta(days=50)).strftime("%d/%m/%Y")
-    url: str = "https://app.cargamaquina.com.br/ordemProducao/exportarOrdens"
+    url: str = "https://v2.cargamaquina.com.br/ordemProducao/exportarOrdens"
     params: dict[str, str] = {
         "OrdemProducao[codigo]": "",
         "OrdemProducao[_nomeCliente]": "",
@@ -318,24 +289,21 @@ async def get_all_op_data_on_carga_maquina() -> dict | None:
         "pageSize": "20",
     }
     logging.info("Trying to get OP data from CargaMaquina with cookies")
+
     async with aiohttp.ClientSession() as session:
+        logging.info("Session created successfully")
         async with session.get(url, params=params, cookies=cookies) as response:
             if not response.ok:
-                logging.error("Error to get data on CargaMaquina with cookies")
+                logging.error(
+                    "Error to get data on CargaMaquina with cookies, Status: %s",
+                    response.status,
+                )
                 return None
             data = await response.text()
             logging.info("Data get successfully on CargaMaquina")
             return format_carga_maquina_json_data_to_op(
                 data, start_deliver_date, end_deliver_date
             )
-
-
-def test_fkapi_get() -> None:
-    """
-    Test the fkapi_get_op_data_by_codigo function.
-    """
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(get_op_data_by_codigo("223536"))
 
 
 def test_carga_maquina_get() -> None:
