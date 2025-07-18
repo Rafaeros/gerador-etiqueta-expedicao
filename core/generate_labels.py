@@ -310,16 +310,16 @@ class Label(Canvas):
         """
         margin: int = 14
         elements_positions = {
-            "date": {"x": margin, "y": 215, "text": self.today_date.strftime("%d/%m/%Y"), "font": "FiraCodeRegular", "font_size": 12},
+            "date": {"x": margin, "y": 225, "text": self.today_date.strftime("%d/%m/%Y"), "font": "FiraCodeRegular", "font_size": 12},
             #"lot": {"x": 113, "y": 215, "text": f"{index}/{self.op.box_count}", "font": "FiraCodeRegular", "font_size": 12},
-            "line": {"x1": 0, "y1": 200, "x2": 428, "y2": 200},
-            "client": {"x": margin, "y": 170, "text": f"CLIENTE: {self.ordem.client}", "font": "FiraCodeRegular", "font_size": 12},
-            "material_code": {"x": margin, "y": 150, "text": f"CODIGO: {self.ordem.material_code}", "font": "FiraCodeBold", "font_size": 18},
-            "description": {"x": margin, "y": 118, "text": f"DESCRICAO: {self.ordem.description}", "font": "FiraCodeRegular", "font_size": 12},
-            "barcode": {"x": -5, "y": 65, "text": self.ordem.barcode, "font": "FiraCodeRegular", "font_size": 12},
-            "quantity": {"x": margin, "y": 20, "text": f"QUANTIDADE: {self.ordem.quantity/self.ordem.box_count:.0f} UND", "font": "FiraCodeRegular", "font_size": 12},
-            "quantity_barcode" : {"x": 150, "y": 15, "text": f"{self.ordem.quantity/self.ordem.box_count:.0f}", "font": "FiraCodeRegular", "font_size": 12},
-            "weight": {"x": 350, "y": 20, "text": f"{self.ordem.weight} KG", "font": "FiraCodeRegular", "font_size": 12}
+            "line": {"x1": 0, "y1": 215, "x2": 428, "y2": 215},
+            "client": {"x": margin, "y": 200, "text": f"CLIENTE: {self.ordem.client}", "font": "FiraCodeRegular", "font_size": 12},
+            "material_code": {"x": margin, "y": 175, "text": f"CODIGO: {self.ordem.material_code}", "font": "FiraCodeBold", "font_size": 18},
+            "description": {"x": margin, "y": 140, "text": f"DESCRICAO: {self.ordem.description}", "font": "FiraCodeRegular", "font_size": 12},
+            "barcode": {"x": -5, "y": 75, "text": self.ordem.barcode, "font": "FiraCodeRegular", "font_size": 12},
+            "quantity": {"x": margin, "y": 30, "text": f"QUANTIDADE: {self.ordem.quantity/self.ordem.box_count:.0f} UND", "font": "FiraCodeRegular", "font_size": 12},
+            "quantity_barcode" : {"x": 150, "y": 25, "text": f"{self.ordem.quantity/self.ordem.box_count:.0f}", "font": "FiraCodeRegular", "font_size": 12},
+            "weight": {"x": 350, "y": 30, "text": f"{self.ordem.weight} KG", "font": "FiraCodeRegular", "font_size": 12}
         }
 
         for key, value in elements_positions.items():
