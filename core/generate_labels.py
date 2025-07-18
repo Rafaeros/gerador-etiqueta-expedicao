@@ -310,9 +310,9 @@ class Label(Canvas):
         """
         margin: int = 14
         elements_positions = {
-            "date": {"x": margin, "y": 225, "text": self.today_date.strftime("%d/%m/%Y"), "font": "FiraCodeRegular", "font_size": 12},
+            "date": {"x": margin, "y": 235, "text": self.today_date.strftime("%d/%m/%Y"), "font": "FiraCodeRegular", "font_size": 12},
             #"lot": {"x": 113, "y": 215, "text": f"{index}/{self.op.box_count}", "font": "FiraCodeRegular", "font_size": 12},
-            "line": {"x1": 0, "y1": 215, "x2": 428, "y2": 215},
+            "line": {"x1": 0, "y1": 227, "x2": 428, "y2": 227},
             "client": {"x": margin, "y": 200, "text": f"CLIENTE: {self.ordem.client}", "font": "FiraCodeRegular", "font_size": 12},
             "material_code": {"x": margin, "y": 175, "text": f"CODIGO: {self.ordem.material_code}", "font": "FiraCodeBold", "font_size": 18},
             "description": {"x": margin, "y": 140, "text": f"DESCRICAO: {self.ordem.description}", "font": "FiraCodeRegular", "font_size": 12},
