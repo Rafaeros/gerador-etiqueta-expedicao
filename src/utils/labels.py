@@ -129,91 +129,101 @@ class ShippingLabelGenerator:
         return True, "", [str(output_path)]
 
     def _draw_normal_pdf(self, pdf: Canvas) -> None:
-        """Renders the standard logistic grid layout via ReportLab."""
+        """
+        Renders the standard logistic grid layout for 150x100mm labels.
+        Optimized for thermal printing with left-aligned metrics and wrapped text.
+        """
         qty_per_box = self.ordem.quantity / self.ordem.box_count
         pdf.setLineWidth(2)
-        
-        # Date (Top safe zone)
         pdf.setFont("FiraCodeBold", 12)
         pdf.drawString(10, 222, f"DATA: {self.today_date.strftime('%d/%m/%Y')}")
+        pdf.rect(6, 0, 418, 215, stroke=1, fill=0)
 
-        # Grid Border
-        pdf.rect(5, 5, 410, 210, stroke=1, fill=0)
-
-        # Horizontal Grid Lines
-        pdf.line(5, 175, 415, 175)
-        pdf.line(5, 100, 415, 100)
+        # Horizontal separators
+        pdf.line(6, 160, 424, 160) # Below recipient
+        pdf.line(6, 95, 424, 95)   # Above description/QR
         
-        # Vertical Grid Lines (Aligned perfectly)
-        pdf.line(200, 175, 200, 5)       # Left section separator
-        pdf.line(305, 175, 305, 5)       # Continuous right split (Qty|Weight, QR|Icons)
+        # Vertical separators
+        pdf.line(200, 160, 200, 0) # Middle divider
+        pdf.line(305, 160, 305, 0) # Right divider
 
-        # Destinatário
+        # --- Recipient Block ---
         pdf.setFont("FiraCodeRegular", 9)
-        pdf.drawString(10, 203, "DESTINATÁRIO:")
+        pdf.drawString(10, 198, "DESTINATÁRIO:")
         
         c_style = getSampleStyleSheet()["Normal"].clone("Dest")
         c_style.fontName = "FiraCodeBold"
         c_style.fontSize = 12
         c_style.leading = 14
+        
         p_client = Paragraph(self.ordem.client, c_style)
-        w, h = p_client.wrapOn(pdf, 400, 25)
-        p_client.drawOn(pdf, 10, 200 - h)
+        w_c, h_c = p_client.wrapOn(pdf, 395, 30)
+        p_client.drawOn(pdf, 10, 196 - h_c)
 
-        # Material Code
+        # Material ID
         pdf.setFont("FiraCodeRegular", 10)
-        pdf.drawString(10, 158, "CÓDIGO MATERIAL:")
+        pdf.drawString(10, 145, "CÓDIGO MATERIAL:")
         pdf.setFont("FiraCodeBold", 16)
-        pdf.drawString(10, 140, self.ordem.material_code)
+        pdf.drawString(10, 127, self.ordem.material_code)
 
         if self.ordem.client_code:
+            label_y = 110
             pdf.setFont("FiraCodeRegular", 9)
-            pdf.drawString(10, 115, "CÓD. CLIENTE: ")
-            pdf.setFont("FiraCodeBold", 11)
-            pdf.drawString(85, 115, self.ordem.client_code)
+            pdf.drawString(10, label_y, "CÓD. CLIENTE:")
+
+            cc_style = getSampleStyleSheet()["Normal"].clone("ClientCode")
+            cc_style.fontName = "FiraCodeBold"
+            cc_style.fontSize = 11
+            cc_style.leading = 12
+
+            p_cc = Paragraph(self.ordem.client_code, cc_style)
+            w_cc, h_cc = p_cc.wrapOn(pdf, 110, 35)
+
+            p_cc.drawOn(pdf, 85, (label_y + 11) - h_cc)
+
+        # Quantity
+        pdf.setFont("FiraCodeRegular", 10)
+        pdf.drawString(205, 145, "QTD TOTAL:")
+        pdf.setFont("FiraCodeBold", 18)
+        pdf.drawString(205, 122, f"{qty_per_box:.0f} UN")
+
+        # Weight
+        pdf.setFont("FiraCodeRegular", 10)
+        pdf.drawString(312, 145, "PESO:")
+        pdf.setFont("FiraCodeBold", 18)
+        pdf.drawString(312, 122, f"{self.ordem.weight} KG")
 
         # Description
         pdf.setFont("FiraCodeRegular", 10)
-        pdf.drawString(10, 85, "DESCRIÇÃO:")
+        pdf.drawString(10, 82, "DESCRIÇÃO:")
         
         d_style = getSampleStyleSheet()["Normal"].clone("Desc")
         d_style.fontName = "FiraCodeRegular"
         d_style.fontSize = 10
-        d_style.leading = 12
+        d_style.leading = 11
+        
         p_desc = Paragraph(self.ordem.description, d_style)
-        p_desc.wrapOn(pdf, 185, 65)
-        p_desc.drawOn(pdf, 10, 10)
+        w_d, h_d = p_desc.wrapOn(pdf, 185, 60)
+        p_desc.drawOn(pdf, 10, 78 - h_d)
 
-        # Quantity
-        pdf.setFont("FiraCodeRegular", 10)
-        pdf.drawString(205, 158, "QTD TOTAL:")
-        pdf.setFont("FiraCodeBold", 18)
-        pdf.drawString(205, 125, f"{qty_per_box:.0f} UN")
-
-        # Weight
-        pdf.setFont("FiraCodeRegular", 10)
-        pdf.drawString(312, 158, "PESO:")
-        pdf.setFont("FiraCodeBold", 18)
-        pdf.drawString(312, 125, f"{self.ordem.weight} KG")
-
-        # QR Code
+        # QR Code centered
         qr_data = f"{self.ordem.code};{self.ordem.material_code};{int(qty_per_box)}"
-        qr_size = 75
-        qr_x = 215
-        _draw_pdf_qr(pdf, qr_data, qr_x, 15, qr_size)
+        qr_size = 82
+        _draw_pdf_qr(pdf, qr_data, 210, 8, qr_size)
+        
         pdf.setFont("FiraCodeRegular", 6)
-        pdf.drawCentredString(252, 8, "VERIFICAR CONTEÚDO")
+        pdf.drawCentredString(252, 3, "VERIFICAR CONTEÚDO")
 
         # Instructions / Logistic Icons
         pdf.setFont("FiraCodeRegular", 8)
-        pdf.drawCentredString(360, 85, "INSTRUÇÕES:")
+        pdf.drawCentredString(365, 82, "INSTRUÇÕES:")
         
-        self._draw_vector_fragile(pdf, 315, 45)
-        self._draw_vector_up(pdf, 365, 45)
+        self._draw_vector_fragile(pdf, 325, 38)
+        self._draw_vector_up(pdf, 375, 38)
         
         pdf.setFont("FiraCodeBold", 7)
-        pdf.drawCentredString(332, 35, "FRÁGIL")
-        pdf.drawCentredString(382, 35, "P/ CIMA")
+        pdf.drawCentredString(342, 28, "FRÁGIL")
+        pdf.drawCentredString(392, 28, "P/ CIMA")
 
     def _draw_vector_fragile(self, pdf: Canvas, x: float, y: float) -> None:
         """Renders the fragile (glass) icon natively in vectors."""

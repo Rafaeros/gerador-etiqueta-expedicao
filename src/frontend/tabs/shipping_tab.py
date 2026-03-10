@@ -49,9 +49,9 @@ class ShippingTab(QWidget):
         labels: list[dict] = [
             {"label": "op_label", "text": "Número da OP:", "row": 0, "col": 0},
             {"label": "code_label", "text": "Código do produto:", "row": 1, "col": 0},
+            {"label": "client_code_label", "text": "Cód. Cliente:", "row": 2, "col": 0},
             {"label": "client_label", "text": "Nome do cliente:"},
             {"label": "description_label", "text": "Descrição do produto:"},
-            {"label": "barcode_label", "text": "Código de barras:"},
             {"label": "quantity_label", "text": "Quantidade total:"},
             {"label": "box_count_label", "text": "Quantidade de caixas:"},
             {"label": "weight_label", "text": "Peso do produto:"},
@@ -60,9 +60,9 @@ class ShippingTab(QWidget):
         inputs: list[dict] = [
             {"input": "op_input", "placeholder": "Número da OP", "row": 0, "col": 1, "width": 200},
             {"input": "code_input", "placeholder": "Código do produto", "row": 1, "col": 1, "width": 200},
+            {"input": "client_code_input", "placeholder": "Cód. Cliente", "row": 2, "col": 1, "width": 200},
             {"input": "client_input", "placeholder": "Nome do cliente", "width": 600},
             {"input": "description_input", "placeholder": "Descrição do produto", "width": 600},
-            {"input": "barcode_input", "placeholder": "Código de barras", "width": 600},
             {"input": "quantity_input", "placeholder": "Quantidade total", "width": 200},
             {"input": "box_count_input", "placeholder": "Quantidade de caixas", "width": 200},
             {"input": "weight_input", "placeholder": "Peso do produto", "width": 200},
@@ -152,7 +152,7 @@ class ShippingTab(QWidget):
         getattr(self, "code_input").clear()
         getattr(self, "client_input").clear()
         getattr(self, "description_input").clear()
-        getattr(self, "barcode_input").clear()
+        getattr(self, "client_code_input").clear()
         getattr(self, "quantity_input").clear()
         getattr(self, "box_count_input").clear()
         getattr(self, "weight_input").clear()
@@ -211,7 +211,8 @@ class ShippingTab(QWidget):
             getattr(self, "code_input").setText(op_data.get("material_code", ""))
             getattr(self, "client_input").setText(op_data.get("client", ""))
             getattr(self, "description_input").setText(op_data.get("description", ""))
-            getattr(self, "barcode_input").setText(op_data.get("barcode", ""))
+            # Preencher código do cliente (colocado abaixo do código do produto)
+            getattr(self, "client_code_input").setText(op_data.get("client_code", ""))
             getattr(self, "quantity_input").setText(str(op_data.get("quantity", "")))
             getattr(self, "box_count_input").setText(str(op_data.get("box_count", 1)))
 
@@ -219,10 +220,11 @@ class ShippingTab(QWidget):
             weight_inp = getattr(self, "weight_input")
             if self.weight_checkbox.isChecked() or not self.balance.is_open:
                 weight_inp.setText("")
-                weight_inp.setFocus()
             else:
                 weight = str(self.balance.weight / 100).replace(".", ",")
                 weight_inp.setText(weight)
+            # Após buscar a OP, mover foco para o input de peso (sempre)
+            weight_inp.setFocus()
 
         except Exception as e:
             logging.error(f"Failed to load OP: {e}")
@@ -253,7 +255,7 @@ class ShippingTab(QWidget):
                 material_code=getattr(self, "code_input").text(),
                 client=getattr(self, "client_input").text(),
                 description=getattr(self, "description_input").text(),
-                barcode=getattr(self, "barcode_input").text(),
+                client_code=getattr(self, "client_code_input").text(),
                 quantity=int(qty_text),
                 box_count=int(getattr(self, "box_count_input").text() or 1),
                 weight=weight_text,
@@ -276,8 +278,12 @@ class ShippingTab(QWidget):
             if all_printed:
                 QMessageBox.information(self, "Sucesso", "Etiqueta impressa com sucesso")
                 self.on_clear_inputs_button_clicked()
+                # Depois de imprimir, colocar foco novamente no input da OP
+                getattr(self, "op_input").setFocus()
             else:
                 QMessageBox.warning(self, "Erro", "Falha ao enviar documento para a impressora.")
+                # Mesmo em falha, focar no input da OP para tentar novamente
+                getattr(self, "op_input").setFocus()
 
         except ValueError as e:
             QMessageBox.warning(self, "Aviso", f"Erro nos dados: {e}")
