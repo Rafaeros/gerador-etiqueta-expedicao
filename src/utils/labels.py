@@ -208,8 +208,8 @@ class ShippingLabelGenerator:
 
         # QR Code centered
         qr_data = f"{self.ordem.code};{self.ordem.material_code};{int(qty_per_box)}"
-        qr_size = 82
-        _draw_pdf_qr(pdf, qr_data, 210, 8, qr_size)
+        qr_size = 100
+        _draw_pdf_qr(pdf, qr_data, 203, 2, qr_size)
         
         pdf.setFont("FiraCodeRegular", 6)
         pdf.drawCentredString(252, 3, "VERIFICAR CONTEÚDO")
