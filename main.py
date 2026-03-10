@@ -4,6 +4,7 @@ import asyncio
 import logging
 from PySide6.QtWidgets import QApplication, QMessageBox, QDialog
 import qasync
+import glob
 
 from src.core.config import ConfigManager
 from src.core.session_manager import SessionManager
@@ -60,8 +61,16 @@ def main() -> None:
     printer_manager = PrinterManager()
     balance = BalanceCommunication()
 
-    # Run background startup logic (Login)
-    is_connected = loop.run_until_complete(startup_logic(config_manager, session_manager))
+    # If a local orders JSON exists, skip authentication and open the app directly
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    tmp_dir = os.path.join(base_dir, "tmp")
+    orders_files = glob.glob(os.path.join(tmp_dir, "ordens_*.json"))
+    if orders_files:
+        is_connected = False
+        logging.info("Found local orders JSON (%s). Skipping authentication.", orders_files[0])
+    else:
+        # Run background startup logic (Login)
+        is_connected = loop.run_until_complete(startup_logic(config_manager, session_manager))
 
     # Initialize Main Interface
     window = ShippingInterface(
