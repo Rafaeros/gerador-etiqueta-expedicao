@@ -187,7 +187,7 @@ class ShippingTab(QWidget):
 
         for i in range(1, 10):
             self.port_select.addItem(f"COM{i}")
-        self.port_select.setCurrentIndex(0)
+        self.port_select.setCurrentIndex(2)
         self.port_select.setFixedWidth(150)
         self.port_select.currentIndexChanged.connect(self.on_port_changed)
 
