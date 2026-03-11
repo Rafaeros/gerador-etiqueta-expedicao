@@ -38,7 +38,7 @@ def format_carga_maquina_html_to_pydantic(
 
     trs = soup.find_all("tr")
     if len(trs) <= 1:
-        logging.warning("Nenhuma linha de OP encontrada no HTML retornado.")
+        logging.warning("No OP rows found in the returned HTML.")
         return None
 
     for tr in trs[1:]:
@@ -74,7 +74,7 @@ def format_carga_maquina_html_to_pydantic(
             continue
 
     if not ops_dict:
-        logging.warning("Falha ao extrair dados das OPs.")
+        logging.warning("Failed to extract OP data.")
         return None
 
     safe_start = start_date.replace("/", "-")

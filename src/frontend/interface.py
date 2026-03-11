@@ -10,14 +10,15 @@ from src.utils.printer import PrinterManager
 from src.frontend.tabs.shipping_tab import ShippingTab
 from src.frontend.tabs.configs_tab import ConfigsTab
 
+
 class ShippingInterface(QMainWindow):
     def __init__(
         self,
         config_manager: ConfigManager,
         printer_manager: PrinterManager,
         balance: BalanceCommunication,
-        session_manager: SessionManager,  # <-- ADICIONADO
-        is_connected: bool = True
+        session_manager: SessionManager,
+        is_connected: bool = True,
     ):
         super().__init__()
         self.config_manager = config_manager
@@ -35,11 +36,11 @@ class ShippingInterface(QMainWindow):
 
         # Repassando o session_manager e a flag is_connected
         self.shipping_tab = ShippingTab(
-            self.config_manager, 
-            self.printer_manager, 
-            self.balance, 
-            self.session_manager, 
-            self.is_connected
+            self.config_manager,
+            self.printer_manager,
+            self.balance,
+            self.session_manager,
+            self.is_connected,
         )
         self.config_tab = ConfigsTab(self.config_manager, self.printer_manager)
 
@@ -51,8 +52,9 @@ class ShippingInterface(QMainWindow):
         if self.balance and self.balance.is_open:
             self.balance.stop_serial()
             self.balance.close()
-        
-        if self.session_manager and hasattr(self.session_manager, "session"):
-            asyncio.create_task(self.session_manager.session.close())
-            
+
+        session = getattr(self.session_manager, "session", None)
+        if self.session_manager and session is not None:
+            asyncio.create_task(session.close())
+
         event.accept()
